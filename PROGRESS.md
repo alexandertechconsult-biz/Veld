@@ -19,6 +19,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 
 - DONE  E0-01  Playwright E2E harness with trace and video recording  | tests: 2/2  | e2e: e2e/recordings/E0-01/20260908T153336Z  | commit: 83f0e37
 - DONE  E0-02  Vite + React + TypeScript scaffold with vite-plugin-pwa and Vitest  | tests: 5/5 unit, 2/2 e2e  | e2e: e2e/recordings/E0-02/20260908T162320Z  | commit: eb8cd8c
+- DONE  E0-03  Dexie schema + typed data layer  | tests: 23/23 unit  | e2e: e2e/recordings/E0-03/verification.md  | commit: <pending>
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
@@ -39,3 +40,6 @@ _None._
 - 2026-09-08 — STARTED E0-02.
 - 2026-09-08 — DONE E0-02. Vite 7 + React 18 + TS scaffold, vite-plugin-pwa emits `dist/manifest.webmanifest` and `dist/sw.js` on build, Vitest passes 5/5 (formatDocumentTitle + App render), README documents `E2E_DEV_SERVER_COMMAND`. Toolchain moved to Vite 7 / Vitest 3 / vite-plugin-pwa 1 to clear the esbuild dev-server advisory (npm audit: 0 vulnerabilities). E2E boot spec green on mobile and desktop.
 - Next eligible: E0-03 (Dexie schema + typed data layer), Seq 3, depends E0-02 which is DONE. (E0-05 also unblocked, Seq 5.)
+- 2026-09-08 — STARTED E0-03.
+- 2026-09-08 — DONE E0-03. Dexie `VeldDatabase` schema v1 covers all 8 Section-6 entities; generic typed CRUD factory + one DI'd repository per entity behind `src/data/index.ts`; no `any`; foreign-key finders and most-recent-first history. Vitest 23/23 (CRUD per entity + update/delete failure paths + finder isolation + date ordering + close-and-reopen persistence). Typecheck and production build clean; npm audit 0 vulnerabilities. Evidence: e2e/recordings/E0-03/verification.md (infra ticket, no runtime surface). Code review: APPROVE_WITH_NITS (non-atomic update read-then-put noted as acceptable for single-user offline).
+- Next eligible: E0-04 (app shell + navigation), Seq 4, depends E0-03 which is now DONE. (E0-05 also unblocked, Seq 5.)

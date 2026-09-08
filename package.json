@@ -22,6 +22,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.2.0",
+    "fake-indexeddb": "^6.2.5",
     "jsdom": "^25.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.6",
@@ -29,6 +30,7 @@
     "vitest": "^3.2.5"
   },
   "dependencies": {
+    "dexie": "^4.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   }
