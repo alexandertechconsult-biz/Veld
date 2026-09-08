@@ -1,14 +1,6 @@
-import { APP_NAME, APP_TAGLINE } from './appInfo';
+import AppShell from './app/AppShell';
 
-/**
- * Placeholder shell. The real navigation and screens land in E0-04; this exists
- * so the toolchain has something real to boot, build, and test against.
- */
+/** The app root. The shell owns navigation and renders the active screen. */
 export default function App() {
-  return (
-    <main>
-      <h1>{APP_NAME}</h1>
-      <p>{APP_TAGLINE}</p>
-    </main>
-  );
+  return <AppShell />;
 }

@@ -1,0 +1,101 @@
+/*
+ * Design tokens — the single source of visual truth, transcribed from
+ * .superdesign/design-system.md. Every colour literal in the app lives here and
+ * nowhere else; all other CSS references these via var(). tokens.test.ts enforces
+ * that rule against the built CSS.
+ *
+ * Light is the default (in-field) theme. Dark (kitchen-table) is applied under
+ * both prefers-color-scheme and an explicit [data-theme] override, per the spec.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Colour — light theme (section 3) */
+  --bg: #FEFAE0;
+  --surface: #FFFFFF;
+  --surface-sunk: #E9EDC9;
+  --border: rgba(1, 71, 46, 0.15); /* #01472E at 15% */
+  --text: #01472E;
+  --text-muted: #3D4A32;
+  --primary: #01472E;
+  --primary-text: #FEFAE0;
+  --accent: #CCD5AE;
+  --danger: #8C3D1E;
+
+  /* Typography (section 4) — one family, Inter, self-hosted via @fontsource. */
+  --font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
+
+  --size-display: 32px;
+  --size-title: 24px;
+  --size-heading: 20px;
+  --size-body: 16px;
+  --size-label: 14px;
+
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-display: 1.2;
+  --leading-title: 1.3;
+  --leading-heading: 1.3;
+  --leading-body: 1.5;
+  --leading-label: 1.4;
+
+  /* Spacing (section 5) — 4, 8, 12, 16, 24, 32, 48. No other values. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Surfaces and shape (section 6) */
+  --radius: 8px;
+  --radius-sheet: 16px;
+  --border-width: 1px;
+
+  /* Motion (section 9) */
+  --motion-duration: 150ms;
+  --motion-easing: ease-out;
+
+  /* Sizing — tap targets (section 2/7) */
+  --target-min: 44px;
+  --target-primary: 56px;
+  --nav-height: 56px;
+  --sidebar-width: 240px;
+  --content-max: 720px;
+  --icon-size: 24px;
+  --icon-empty: 32px;
+}
+
+/* Dark theme — applied by system preference and by explicit override. Never
+ * define a colour only inside a dark block; every token above is re-stated. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #12160E;
+    --surface: #1C2116;
+    --surface-sunk: #262C1F;
+    --border: #3A4230;
+    --text: #FEFAE0;
+    --text-muted: #A3B18A;
+    --primary: #CCD5AE;
+    --primary-text: #01472E;
+    --accent: #3A4230;
+    --danger: #E08C5A;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #12160E;
+  --surface: #1C2116;
+  --surface-sunk: #262C1F;
+  --border: #3A4230;
+  --text: #FEFAE0;
+  --text-muted: #A3B18A;
+  --primary: #CCD5AE;
+  --primary-text: #01472E;
+  --accent: #3A4230;
+  --danger: #E08C5A;
+}
