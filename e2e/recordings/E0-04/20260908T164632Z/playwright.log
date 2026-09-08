@@ -1,0 +1,13 @@
+
+Running 8 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e0-04-shell.spec.ts:16:1 › shell shows the right nav surface for the viewport @E0-04 (583ms)
+  ✓  2 [mobile-android] › e2e/specs/e0-04-shell.spec.ts:29:1 › navigates the five destinations with useful empty states @E0-04 (486ms)
+  ✓  3 [mobile-android] › e2e/specs/e0-04-shell.spec.ts:50:1 › More menu reaches Financials and Settings @E0-04 (420ms)
+  ✓  4 [mobile-android] › e2e/specs/e0-04-shell.spec.ts:67:1 › empty-state CTA routes to farm setup @E0-04 (341ms)
+  ✓  5 [desktop-chromium] › e2e/specs/e0-04-shell.spec.ts:16:1 › shell shows the right nav surface for the viewport @E0-04 (260ms)
+  ✓  6 [desktop-chromium] › e2e/specs/e0-04-shell.spec.ts:29:1 › navigates the five destinations with useful empty states @E0-04 (410ms)
+  ✓  7 [desktop-chromium] › e2e/specs/e0-04-shell.spec.ts:50:1 › More menu reaches Financials and Settings @E0-04 (373ms)
+  ✓  8 [desktop-chromium] › e2e/specs/e0-04-shell.spec.ts:67:1 › empty-state CTA routes to farm setup @E0-04 (293ms)
+
+  8 passed (5.8s)
