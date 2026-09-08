@@ -24,6 +24,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: 6550d34
 - DONE  GATE-0  Phase 0 human checkpoint — cleared by Barrett, Phase 1 authorised  | evidence: e2e/recordings/E0-05/verification.md + live at https://veld-six.vercel.app/
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
+- DONE  E1-01  Create farm profile (name), persisted in IndexedDB  | tests: 62/62 unit, 2/2 e2e  | e2e: e2e/recordings/E1-01/20260908T200832Z  | commit: <pending>
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
@@ -59,3 +60,6 @@ _None._
 - 2026-09-08 — DONE E0-05. Vercel connected via dashboard; verified live with Playwright, 2 passed, manifest and sw.js reachable, cream token intact in built CSS.
 - 2026-09-08 — GATE-0 reached. Awaiting human verification on a real device before Phase 1.
 - 2026-09-08 — PASSED: GATE-0. Barrett authorised Phase 1. Thirteen tickets now eligible, ending at GATE-1.
+- 2026-09-08 — STARTED E1-01 (Seq 7, depends GATE-0 DONE) — first Phase-1 ticket.
+- 2026-09-08 — DONE E1-01. Farm-profile create/rename flow in Settings. Domain module `src/data/farmProfile.ts` (`loadCurrentFarm` + `saveFarmProfile`) is dependency-inverted — repositories injected, no DOM, unit-tested against a fresh DB; re-reads the current farm before every save so a repeated save can never create a second farm (MVP is one farm per device). `useFarmProfile` hook wires it to the singleton repositories at the composition root; `FarmProfile.tsx` is a presentational form (Input per design-system §7: 56px, label above, tokens-only CSS so the colour-guard test stays green) that pre-fills the saved name and flips the button Create farm → Save changes. Vitest 62/62 (10 new: 7 domain incl. blank-name-rejected-without-write, trim, rename-not-duplicate, and close-and-reopen persistence; 3 component). Typecheck clean; no ESLint config in project. Review: APPROVE_WITH_NITS (lingering "Farm saved." status is a deferred nit; no observability logging matches the existing useBackup pattern in this client PWA). Evidence: e2e/recordings/E1-01/20260908T200832Z — reload-persistence + rename round-trip, 2/2 on mobile+desktop. (A first record attempt failed with ERR_CONNECTION_REFUSED because E2E_DEV_SERVER_COMMAND was unset; re-run with it set per README, green.)
+- Next eligible: E1-02 (add a Livestock/Crop enterprise), Seq 8, depends E1-01 which is now DONE.

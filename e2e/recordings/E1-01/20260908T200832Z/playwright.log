@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e1-01-farm-profile.spec.ts:10:1 › saves a farm name and it survives a reload @E1-01 (1.2s)
+  ✓  2 [desktop-chromium] › e2e/specs/e1-01-farm-profile.spec.ts:10:1 › saves a farm name and it survives a reload @E1-01 (808ms)
+
+  2 passed (4.3s)
