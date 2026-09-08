@@ -17,3 +17,8 @@ blob-report/
 # RALPH loop output
 ralph-logs/
 STOP
+
+# E2E recordings: keep the top-level trace/video/log as evidence, drop the
+# duplicate copies Playwright writes into artifacts/ and report/
+e2e/recordings/*/*/artifacts/
+e2e/recordings/*/*/report/

@@ -1,0 +1,13 @@
+{
+  "name": "farm-mvp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Offline-first farm record-keeping PWA for a single mixed crop-and-livestock operation.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "record:e2e": "bash .claude/skills/ralph-loop/scripts/record_e2e.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}
