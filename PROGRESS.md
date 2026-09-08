@@ -18,6 +18,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 <!-- format: - DONE  <TICKET-ID>  <summary>  | tests: <pass/total>  | e2e: <path>  | commit: <hash> -->
 
 - DONE  E0-01  Playwright E2E harness with trace and video recording  | tests: 2/2  | e2e: e2e/recordings/E0-01/20260908T153336Z  | commit: 83f0e37
+- DONE  E0-02  Vite + React + TypeScript scaffold with vite-plugin-pwa and Vitest  | tests: 5/5 unit, 2/2 e2e  | e2e: e2e/recordings/E0-02/20260908T162320Z  | commit: 613cfaf
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
@@ -35,4 +36,6 @@ _None._
 - 2026-09-08 — repo initialised, ledger created.
 - 2026-09-08 — stack decisions recorded in BACKLOG.md Section 9; backlog restructured into phases with Seq ordering, explicit dependencies, and gates.
 - 2026-09-08 — DONE E0-01. Verified by running `record_e2e.sh E0-01 --ui`: 2 passed, trace.zip and video.webm saved.
-- Next eligible: E0-02 (Vite + React + TypeScript scaffold), Seq 2, depends E0-01 which is DONE.
+- 2026-09-08 — STARTED E0-02.
+- 2026-09-08 — DONE E0-02. Vite 7 + React 18 + TS scaffold, vite-plugin-pwa emits `dist/manifest.webmanifest` and `dist/sw.js` on build, Vitest passes 5/5 (formatDocumentTitle + App render), README documents `E2E_DEV_SERVER_COMMAND`. Toolchain moved to Vite 7 / Vitest 3 / vite-plugin-pwa 1 to clear the esbuild dev-server advisory (npm audit: 0 vulnerabilities). E2E boot spec green on mobile and desktop.
+- Next eligible: E0-03 (Dexie schema + typed data layer), Seq 3, depends E0-02 which is DONE. (E0-05 also unblocked, Seq 5.)
