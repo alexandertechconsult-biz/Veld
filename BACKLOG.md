@@ -296,7 +296,7 @@ Removed from MVP by the Section 9 decisions. Recorded so the loop does not resur
 | E6-02 | Background sync on reconnect | Cut with the sync decision. Replaced by export and import, which are new tickets E6-05 and E6-06 |
 | E6-03 | Pending-sync indicator | Nothing to sync, so nothing to indicate |
 | E6-04 | Conflict handling, last-write-wins | No second writer and no server, so no conflicts are possible |
-| E4-03 | Today's and overdue tasks on home | Kept, renumbered to E7-03 because it is a Home screen change, not a Tasks one |
+| E4-03 (original meaning) | Today's and overdue tasks on home | Kept, renumbered to E7-03 because it is a Home screen change, not a Tasks one. The E4-03 id has since been reused for task edit and delete at Seq 19 — that row in Phase 1 is the live one |
 
 ---
 
