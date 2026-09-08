@@ -2,12 +2,13 @@
 
 You are running ONE iteration of an autonomous build loop. You start with fresh context every time, so the files on disk are your only memory. Do exactly one ticket, all the way through the gates, then stop.
 
-## Files (defaults for a native-Windows checkout; run the loop from the repo/worktree root)
+## Files (macOS checkout; run the loop from the worktree root)
 - Backlog (source of truth):  `./BACKLOG.md`
 - Progress ledger:            `./PROGRESS.md`
 - Develop role:               skill `senior-programmer`
 - Review role:                skill `code-reviewer`
-- E2E recorder:               `./.claude/skills/ralph-loop/scripts/record_e2e.ps1`
+- E2E recorder:               `bash ./.claude/skills/ralph-loop/scripts/record_e2e.sh`
+- Design system (visual truth):`./.superdesign/design-system.md`
 - E2E recordings go in:       `./e2e/recordings/<TICKET-ID>/`
 
 ## Do this, in order
@@ -23,7 +24,7 @@ You are running ONE iteration of an autonomous build loop. You start with fresh 
 5. **Unit test.** Run the full test suite. If red, fix (max 3 attempts) and rerun. Never continue on a red suite. Capture the final test output.
 
 6. **Test the running behaviour & record evidence.**
-   - If the ticket adds a **user-facing or API surface**: run `./.claude/skills/ralph-loop/scripts/record_e2e.ps1 <TICKET-ID>` to exercise it end-to-end and save a durable recording under `e2e/recordings/<TICKET-ID>/`. If the E2E fails, treat it like a red test: fix (bounded) and rerun. Do not fake or skip it.
+   - If the ticket adds a **user-facing or API surface**: run `bash ./.claude/skills/ralph-loop/scripts/record_e2e.sh <TICKET-ID> --ui` to exercise it end-to-end and save a durable recording under `e2e/recordings/<TICKET-ID>/`. If the E2E fails, treat it like a red test: fix (bounded) and rerun. Do not fake or skip it.
    - If the ticket is a **spike or pure-infra change with no runtime surface** (provisioning, CI, config, scaffolding): instead write a short `e2e/recordings/<TICKET-ID>/verification.md` stating exactly what you ran to confirm it works (commands + observed result). This stands in for the E2E recording.
 
 7. **Done.** Only if review passed AND unit tests pass AND evidence was saved (an E2E recording for surface tickets, or a `verification.md` note for spikes/infra):
