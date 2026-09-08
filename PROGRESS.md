@@ -22,6 +22,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E0-03  Dexie schema + typed data layer  | tests: 23/23 unit  | e2e: e2e/recordings/E0-03/verification.md  | commit: 3ab566b
 - DONE  E0-04  App shell + responsive navigation  | tests: 39/39 unit, 8/8 e2e  | e2e: e2e/recordings/E0-04/20260908T164632Z  | commit: e28eb39
 - DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: 6550d34
+- DONE  GATE-0  Phase 0 human checkpoint — cleared by Barrett, Phase 1 authorised  | evidence: e2e/recordings/E0-05/verification.md + live at https://veld-six.vercel.app/
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
 
 ## In progress
@@ -57,3 +58,4 @@ _None._
 - Next eligible: none on the critical path — E0-05 (Vercel deploy) stays human-blocked, and it gates GATE-0 and all of Phase 1. Phase-2 tickets E8-01/E8-02 need GATE-1. The loop cannot advance until Barrett resolves the E0-05 Vercel auth question.
 - 2026-09-08 — DONE E0-05. Vercel connected via dashboard; verified live with Playwright, 2 passed, manifest and sw.js reachable, cream token intact in built CSS.
 - 2026-09-08 — GATE-0 reached. Awaiting human verification on a real device before Phase 1.
+- 2026-09-08 — PASSED: GATE-0. Barrett authorised Phase 1. Thirteen tickets now eligible, ending at GATE-1.
