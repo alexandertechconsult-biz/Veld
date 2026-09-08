@@ -26,7 +26,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
 - DONE  E1-01  Create farm profile (name), persisted in IndexedDB  | tests: 62/62 unit, 2/2 e2e  | e2e: e2e/recordings/E1-01/20260908T200832Z  | commit: b8ced3f
 - DONE  E1-02  Add a Livestock or Crop enterprise, each named  | tests: 75/75 unit, 2/2 e2e  | e2e: e2e/recordings/E1-02/20260908T201705Z  | commit: 2d1998f
-- DONE  E2-01  Register an animal or group (count 1 = individual, count > 1 = group)  | tests: 95/95 unit, 2/2 e2e  | e2e: e2e/recordings/E2-01/20260908T202435Z  | commit: PENDING
+- DONE  E2-01  Register an animal or group (count 1 = individual, count > 1 = group)  | tests: 95/95 unit, 2/2 e2e  | e2e: e2e/recordings/E2-01/20260908T202435Z  | commit: 92cc5b4
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
