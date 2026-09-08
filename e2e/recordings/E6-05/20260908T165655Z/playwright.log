@@ -1,0 +1,9 @@
+
+Running 4 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e6-05-backup.spec.ts:54:1 › imports a backup then exports it back as a valid file @E6-05 (799ms)
+  ✓  2 [mobile-android] › e2e/specs/e6-05-backup.spec.ts:85:1 › shows an error when the file is not a Veld backup @E6-05 (301ms)
+  ✓  3 [desktop-chromium] › e2e/specs/e6-05-backup.spec.ts:54:1 › imports a backup then exports it back as a valid file @E6-05 (528ms)
+  ✓  4 [desktop-chromium] › e2e/specs/e6-05-backup.spec.ts:85:1 › shows an error when the file is not a Veld backup @E6-05 (274ms)
+
+  4 passed (4.7s)
