@@ -335,6 +335,48 @@
   opacity: 0.5;
 }
 
+/* The type picker reuses the Input style (design-system §7); it stays a native
+   select so its dropdown arrow signals it's a picker, not a text field. */
+select.field__input {
+  cursor: pointer;
+}
+
+/* Enterprises list (E1-02) — List row spec, design-system §7: 64px min height,
+   --surface fill, 1px bottom hairline, 16px padding, 24px leading icon. */
+.enterprise-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.enterprise-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-bottom: var(--border-width) solid var(--border);
+  color: var(--text);
+}
+
+.enterprise-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.enterprise-row__name {
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+}
+
+.enterprise-row__type {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  color: var(--text-muted);
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;

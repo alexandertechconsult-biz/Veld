@@ -1,6 +1,7 @@
 import { useRef, type ChangeEvent } from 'react';
 import { Download, Upload } from 'lucide-react';
 import FarmProfile from './FarmProfile';
+import Enterprises from './Enterprises';
 import { useBackup } from './useBackup';
 
 const ICON_SIZE = 24;
@@ -29,6 +30,8 @@ export default function SettingsScreen() {
   return (
     <div className="settings">
       <FarmProfile />
+
+      <Enterprises />
 
       <section className="settings-section" aria-labelledby="backup-heading">
         <h2 id="backup-heading" className="settings-section__title">
