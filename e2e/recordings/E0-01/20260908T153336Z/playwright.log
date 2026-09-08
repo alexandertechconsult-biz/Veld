@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/harness-check.spec.ts:14:5 › harness records a navigation, a click, and an assertion @E0-01 (522ms)
+  ✓  2 [desktop-chromium] › e2e/specs/harness-check.spec.ts:14:5 › harness records a navigation, a click, and an assertion @E0-01 (274ms)
+
+  2 passed (2.2s)

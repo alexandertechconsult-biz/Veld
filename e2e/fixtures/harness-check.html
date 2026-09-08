@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>E2E harness check</title>
+  </head>
+  <body>
+    <h1 id="heading">E2E harness check</h1>
+    <button id="record-action" type="button">Run action</button>
+    <p id="result" hidden>Action recorded</p>
+    <script>
+      document.getElementById('record-action').addEventListener('click', () => {
+        document.getElementById('result').hidden = false;
+      });
+    </script>
+  </body>
+</html>
