@@ -293,6 +293,48 @@
   color: var(--danger);
 }
 
+/* Farm profile form (E1-01) --------------------------------------------- */
+.farm-form {
+  display: flex;
+  flex-direction: column;
+  /* "Space above a primary action: 32" (design-system §5). */
+  gap: var(--space-8);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field__label {
+  font-size: var(--size-label);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-label);
+}
+
+/* Input (design-system §7): 56px, --surface fill, 1px --border, 8px radius,
+   16px padding, Body size. Label sits above, never placeholder-only. */
+.field__input {
+  min-height: var(--target-primary);
+  padding: 0 var(--space-4);
+  background: var(--surface);
+  color: var(--text);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: var(--size-body);
+}
+
+.field__input:focus-visible {
+  outline: var(--border-width) solid var(--primary);
+  outline-offset: 2px;
+}
+
+.field__input:disabled {
+  opacity: 0.5;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;

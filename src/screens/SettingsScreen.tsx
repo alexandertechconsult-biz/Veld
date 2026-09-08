@@ -1,16 +1,16 @@
 import { useRef, type ChangeEvent } from 'react';
-import { Settings, Download, Upload } from 'lucide-react';
-import EmptyState from '../components/EmptyState';
+import { Download, Upload } from 'lucide-react';
+import FarmProfile from './FarmProfile';
 import { useBackup } from './useBackup';
 
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.5;
 
 /**
- * Farm setup lands here (the creation flow is E1-01; until then the empty state
- * stands in). E6-05 adds data backup: export everything on this device to a
- * file, or restore from one — the farmer's safety net for a lost phone, since
- * there is no server (BACKLOG.md Section 9).
+ * Farm setup lands here. `FarmProfile` (E1-01) lets the farmer name their farm.
+ * E6-05 adds data backup: export everything on this device to a file, or restore
+ * from one — the farmer's safety net for a lost phone, since there is no server
+ * (BACKLOG.md Section 9).
  */
 export default function SettingsScreen() {
   const { status, exportBackup, importBackup } = useBackup();
@@ -28,7 +28,7 @@ export default function SettingsScreen() {
 
   return (
     <div className="settings">
-      <EmptyState icon={Settings} message="No farm set up yet. Farm setup lives here." />
+      <FarmProfile />
 
       <section className="settings-section" aria-labelledby="backup-heading">
         <h2 id="backup-heading" className="settings-section__title">
