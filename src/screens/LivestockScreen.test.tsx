@@ -166,4 +166,57 @@ describe('LivestockScreen', () => {
     expect(screen.queryByTestId('event-note-input')).not.toBeInTheDocument();
     expect(await db.events.toArray()).toHaveLength(0);
   });
+
+  it('shows an animal event history most recent first when expanded (E2-03)', async () => {
+    await seedAnimal();
+    // Seed two events out of order; the screen must show them newest first.
+    await db.events.add({
+      id: 'ev-old',
+      createdAt: 1,
+      updatedAt: 1,
+      livestockId: 'a1',
+      date: Date.parse('2026-01-01'),
+      type: 'health',
+      note: 'Older event',
+    });
+    await db.events.add({
+      id: 'ev-new',
+      createdAt: 2,
+      updatedAt: 2,
+      livestockId: 'a1',
+      date: Date.parse('2026-09-08'),
+      type: 'movement',
+      note: 'Newer event',
+    });
+    renderScreen();
+
+    // The row meta reflects the two logged events before expanding.
+    expect(await screen.findByText(/2 events/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Log event' }));
+
+    const history = screen.getByRole('list', { name: 'Event history for ZA-001' });
+    const rows = within(history).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('Newer event');
+    expect(rows[1]).toHaveTextContent('Older event');
+  });
+
+  it('logs an event and shows it in the same animal history (E2-03)', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    // The freshly opened, empty history tells the farmer nothing is logged yet.
+    expect(screen.getByText('No events logged yet.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('event-note-input'), {
+      target: { value: 'Vaccinated for lumpy skin' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Log event' }));
+
+    await screen.findByText('Event logged.');
+    // Re-open the row and confirm the new event is now in the history.
+    fireEvent.click(screen.getByRole('button', { name: 'Log event' }));
+    const history = screen.getByRole('list', { name: 'Event history for ZA-001' });
+    expect(history).toHaveTextContent('Vaccinated for lumpy skin');
+  });
 });

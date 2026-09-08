@@ -5,6 +5,7 @@ import { useNavigate } from '../app/navigationContext';
 import { describeLivestock } from '../data/livestock';
 import { useLivestock } from './useLivestock';
 import EventForm, { type EventFormValues } from './EventForm';
+import EventHistory from './EventHistory';
 
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.5;
@@ -18,15 +19,15 @@ function eventCountLabel(count: number): string {
 /**
  * Livestock module. Register an animal or group (E2-01) — one record type
  * carries a `count`: 1 reads as an individual with a tag, above 1 as a group
- * (BACKLOG.md Section 9) — and log a dated event against any of them (E2-02).
- * Event history comes next (E2-03).
+ * (BACKLOG.md Section 9) — log a dated event against any of them (E2-02), and
+ * see each animal's event history, most recent first (E2-03).
  */
 export default function LivestockScreen() {
   const navigate = useNavigate();
   const {
     enterprises,
     animals,
-    eventCounts,
+    eventsByAnimal,
     status,
     eventStatus,
     registerLivestock,
@@ -111,7 +112,8 @@ export default function LivestockScreen() {
         <ul className="record-list" aria-label="Livestock">
           {animals.map((animal) => {
             const { countLabel } = describeLivestock(animal);
-            const events = eventCountLabel(eventCounts[animal.id] ?? 0);
+            const history = eventsByAnimal[animal.id] ?? [];
+            const events = eventCountLabel(history.length);
             const isOpen = openEventFor === animal.id;
             return (
               <li key={animal.id} className="record-row">
@@ -137,12 +139,15 @@ export default function LivestockScreen() {
                   </button>
                 </div>
                 {isOpen ? (
-                  <EventForm
-                    animalName={animal.name}
-                    status={eventStatus}
-                    onLog={(values) => onLogEvent(animal.id, values)}
-                    onCancel={() => setOpenEventFor(null)}
-                  />
+                  <div className="record-row__panel">
+                    <EventHistory animalName={animal.name} events={history} />
+                    <EventForm
+                      animalName={animal.name}
+                      status={eventStatus}
+                      onLog={(values) => onLogEvent(animal.id, values)}
+                      onCancel={() => setOpenEventFor(null)}
+                    />
+                  </div>
                 ) : null}
               </li>
             );

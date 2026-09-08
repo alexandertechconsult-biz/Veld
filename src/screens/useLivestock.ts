@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { repositories } from '../data';
-import type { Enterprise, LivestockRecord } from '../data';
+import type { Enterprise, Event, LivestockRecord } from '../data';
 import {
   EmptyLivestockNameError,
   EmptySpeciesError,
@@ -36,15 +36,15 @@ export type EventStatus =
   | { kind: 'saved' }
   | { kind: 'error'; message: string };
 
-/** How many events each animal/group has, keyed by its id. */
-export type EventCounts = Readonly<Record<string, number>>;
+/** Each animal/group's events, most recent first, keyed by its id (E2-03). */
+export type EventsByAnimal = Readonly<Record<string, Event[]>>;
 
-/** Load the event count for every animal in the list, keyed by id. */
-async function loadEventCounts(list: LivestockRecord[]): Promise<EventCounts> {
+/** Load every animal's event history (most recent first), keyed by id. */
+async function loadEvents(list: LivestockRecord[]): Promise<EventsByAnimal> {
   const entries = await Promise.all(
     list.map(async (animal) => {
       const events = await listEventsFor(repositories, animal.id);
-      return [animal.id, events.length] as const;
+      return [animal.id, events] as const;
     }),
   );
   return Object.fromEntries(entries);
@@ -59,7 +59,7 @@ async function loadEventCounts(list: LivestockRecord[]): Promise<EventCounts> {
 export function useLivestock() {
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [animals, setAnimals] = useState<LivestockRecord[]>([]);
-  const [eventCounts, setEventCounts] = useState<EventCounts>({});
+  const [eventsByAnimal, setEventsByAnimal] = useState<EventsByAnimal>({});
   const [status, setStatus] = useState<LivestockStatus>({ kind: 'loading' });
   const [eventStatus, setEventStatus] = useState<EventStatus>({ kind: 'idle' });
 
@@ -71,11 +71,11 @@ export function useLivestock() {
           listLivestockEnterprises(repositories),
           listLivestock(repositories),
         ]);
-        const counts = await loadEventCounts(list);
+        const events = await loadEvents(list);
         if (!active) return;
         setEnterprises(ents);
         setAnimals(list);
-        setEventCounts(counts);
+        setEventsByAnimal(events);
         setStatus({ kind: 'ready' });
       } catch {
         if (!active) return;
@@ -97,7 +97,7 @@ export function useLivestock() {
       await addLivestock(repositories, input);
       const list = await listLivestock(repositories);
       setAnimals(list);
-      setEventCounts(await loadEventCounts(list));
+      setEventsByAnimal(await loadEvents(list));
       setStatus({ kind: 'saved' });
       return true;
     } catch (error) {
@@ -119,7 +119,7 @@ export function useLivestock() {
     try {
       await addEvent(repositories, input);
       const list = await listLivestock(repositories);
-      setEventCounts(await loadEventCounts(list));
+      setEventsByAnimal(await loadEvents(list));
       setEventStatus({ kind: 'saved' });
       return true;
     } catch (error) {
@@ -143,7 +143,7 @@ export function useLivestock() {
   return {
     enterprises,
     animals,
-    eventCounts,
+    eventsByAnimal,
     status,
     eventStatus,
     registerLivestock: registerOne,
