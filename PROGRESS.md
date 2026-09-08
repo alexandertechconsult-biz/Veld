@@ -28,7 +28,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E1-02  Add a Livestock or Crop enterprise, each named  | tests: 75/75 unit, 2/2 e2e  | e2e: e2e/recordings/E1-02/20260908T201705Z  | commit: 2d1998f
 - DONE  E2-01  Register an animal or group (count 1 = individual, count > 1 = group)  | tests: 95/95 unit, 2/2 e2e  | e2e: e2e/recordings/E2-01/20260908T202435Z  | commit: 92cc5b4
 - DONE  E2-02  Log an event (date, type, note) against an animal or group  | tests: 108/108 unit, 2/2 e2e  | e2e: e2e/recordings/E2-02/20260908T203323Z  | commit: 7a981de
-- DONE  E2-03  See a history of events per animal or group, most recent first  | tests: 113/113 unit, 2/2 e2e  | e2e: e2e/recordings/E2-03/20260908T203926Z  | commit: pending
+- DONE  E2-03  See a history of events per animal or group, most recent first  | tests: 113/113 unit, 2/2 e2e  | e2e: e2e/recordings/E2-03/20260908T203926Z  | commit: 02cd8c3
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
