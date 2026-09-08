@@ -24,7 +24,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: 6550d34
 - DONE  GATE-0  Phase 0 human checkpoint — cleared by Barrett, Phase 1 authorised  | evidence: e2e/recordings/E0-05/verification.md + live at https://veld-six.vercel.app/
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
-- DONE  E1-01  Create farm profile (name), persisted in IndexedDB  | tests: 62/62 unit, 2/2 e2e  | e2e: e2e/recordings/E1-01/20260908T200832Z  | commit: <pending>
+- DONE  E1-01  Create farm profile (name), persisted in IndexedDB  | tests: 62/62 unit, 2/2 e2e  | e2e: e2e/recordings/E1-01/20260908T200832Z  | commit: b8ced3f
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
