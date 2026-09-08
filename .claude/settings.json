@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)", "Write(**)", "Edit(**)",
+      "Bash(git:*)",
+      "Bash(python:*)", "Bash(python3:*)", "Bash(pip:*)", "Bash(pytest:*)",
+      "Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)",
+      "Bash(docker:*)", "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "Bash(rm:*)", "Bash(del:*)", "Bash(rmdir:*)", "Bash(Remove-Item:*)",
+      "Bash(format:*)", "Bash(curl:*)", "Bash(wget:*)"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Env
+.env
+.env.local
+
+# Playwright / test output
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# RALPH loop output
+ralph-logs/
+STOP

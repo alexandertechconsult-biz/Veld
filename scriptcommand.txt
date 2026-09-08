@@ -1,0 +1,1 @@
+.\.claude\skills\ralph-loop\scripts\ralph.ps1 -MaxIterations 5 -Prompt .\.claude\skills\ralph-loop\references\PROMPT.md -ProgressFile .\PROGRESS.md
