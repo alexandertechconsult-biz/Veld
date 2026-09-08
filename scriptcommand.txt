@@ -1,1 +1,9 @@
-.\.claude\skills\ralph-loop\scripts\ralph.ps1 -MaxIterations 5 -Prompt .\.claude\skills\ralph-loop\references\PROMPT.md -ProgressFile .\PROGRESS.md
+# Run the RALPH loop (macOS / zsh). Run from the worktree root, not your main checkout.
+bash .claude/skills/ralph-loop/scripts/ralph.sh \
+  --max-iterations 5 \
+  --branch ralph/phase-0 \
+  --prompt .claude/skills/ralph-loop/references/PROMPT.md \
+  --progress ./PROGRESS.md
+
+# Halt cleanly between iterations:  touch STOP
+# The script deletes STOP on startup, so no need to remove it before the next run.
