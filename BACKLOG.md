@@ -1,6 +1,6 @@
 # Farm Management MVP — Product Specification
 
-**Working name:** [TBD]
+**Working name:** Veld
 **Owner:** Barrett, Alexander Tech Consultants
 **Stage:** Pre-discovery — spec drafted ahead of first farmer conversation
 **Doc purpose:** Demo-ready spec to walk a mixed crop/livestock farmer through, and a build-ready backlog for development

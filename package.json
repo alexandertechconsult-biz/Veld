@@ -1,5 +1,5 @@
 {
-  "name": "farm-mvp",
+  "name": "veld",
   "version": "0.0.0",
   "private": true,
   "description": "Offline-first farm record-keeping PWA for a single mixed crop-and-livestock operation.",
