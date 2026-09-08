@@ -4,24 +4,41 @@ import EmptyState from '../components/EmptyState';
 import { useNavigate } from '../app/navigationContext';
 import { describeLivestock } from '../data/livestock';
 import { useLivestock } from './useLivestock';
+import EventForm, { type EventFormValues } from './EventForm';
 
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.5;
 
+/** "3 events" / "1 event"; empty when none, so the meta line stays short. */
+function eventCountLabel(count: number): string {
+  if (count === 0) return '';
+  return count === 1 ? '1 event' : `${count} events`;
+}
+
 /**
- * Livestock module (E2-01). Register an animal or group against a livestock
- * enterprise. One record type carries a `count`: 1 reads as an individual with a
- * tag, above 1 as a group (BACKLOG.md Section 9). Event logging and history come
- * later (E2-02, E2-03).
+ * Livestock module. Register an animal or group (E2-01) — one record type
+ * carries a `count`: 1 reads as an individual with a tag, above 1 as a group
+ * (BACKLOG.md Section 9) — and log a dated event against any of them (E2-02).
+ * Event history comes next (E2-03).
  */
 export default function LivestockScreen() {
   const navigate = useNavigate();
-  const { enterprises, animals, status, registerLivestock } = useLivestock();
+  const {
+    enterprises,
+    animals,
+    eventCounts,
+    status,
+    eventStatus,
+    registerLivestock,
+    logEvent,
+    resetEventStatus,
+  } = useLivestock();
 
   const [enterpriseId, setEnterpriseId] = useState('');
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('');
   const [count, setCount] = useState('1');
+  const [openEventFor, setOpenEventFor] = useState<string | null>(null);
 
   // Default the enterprise picker to the first livestock enterprise once loaded.
   useEffect(() => {
@@ -70,6 +87,14 @@ export default function LivestockScreen() {
     }
   }
 
+  async function onLogEvent(livestockId: string, values: EventFormValues): Promise<boolean> {
+    const logged = await logEvent({ livestockId, ...values });
+    if (logged) {
+      setOpenEventFor(null);
+    }
+    return logged;
+  }
+
   return (
     <section className="module" aria-labelledby="livestock-heading">
       <h2 id="livestock-heading" className="module__title">
@@ -86,20 +111,50 @@ export default function LivestockScreen() {
         <ul className="record-list" aria-label="Livestock">
           {animals.map((animal) => {
             const { countLabel } = describeLivestock(animal);
+            const events = eventCountLabel(eventCounts[animal.id] ?? 0);
+            const isOpen = openEventFor === animal.id;
             return (
               <li key={animal.id} className="record-row">
-                <Beef size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
-                <span className="record-row__text">
-                  <span className="record-row__name">{animal.name}</span>
-                  <span className="record-row__meta">
-                    {animal.species} · {countLabel}
+                <div className="record-row__main">
+                  <Beef size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
+                  <span className="record-row__text">
+                    <span className="record-row__name">{animal.name}</span>
+                    <span className="record-row__meta">
+                      {animal.species} · {countLabel}
+                      {events ? ` · ${events}` : ''}
+                    </span>
                   </span>
-                </span>
+                  <button
+                    type="button"
+                    className="btn-secondary record-row__action"
+                    aria-expanded={isOpen}
+                    onClick={() => {
+                      if (!isOpen) resetEventStatus();
+                      setOpenEventFor(isOpen ? null : animal.id);
+                    }}
+                  >
+                    {isOpen ? 'Close' : 'Log event'}
+                  </button>
+                </div>
+                {isOpen ? (
+                  <EventForm
+                    animalName={animal.name}
+                    status={eventStatus}
+                    onLog={(values) => onLogEvent(animal.id, values)}
+                    onCancel={() => setOpenEventFor(null)}
+                  />
+                ) : null}
               </li>
             );
           })}
         </ul>
       )}
+
+      {eventStatus.kind === 'saved' && openEventFor === null ? (
+        <p className="settings-status settings-status--success" role="status">
+          Event logged.
+        </p>
+      ) : null}
 
       <form className="farm-form" onSubmit={onSubmit}>
         {enterprises.length > 1 ? (

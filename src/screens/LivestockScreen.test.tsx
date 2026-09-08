@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import LivestockScreen from './LivestockScreen';
 import { NavigationProvider } from '../app/navigationContext';
 import { db } from '../data';
@@ -7,6 +7,7 @@ import { db } from '../data';
 // LivestockScreen talks to the singleton database; start each test from empty.
 // A no-op navigate satisfies the context the screen reads for the empty state.
 beforeEach(async () => {
+  await db.events.clear();
   await db.livestock.clear();
   await db.enterprises.clear();
   await db.farms.clear();
@@ -32,6 +33,21 @@ async function seedLivestockEnterprise(): Promise<string> {
     name: 'Beef herd',
   });
   return 'e1';
+}
+
+/** Seed a livestock enterprise with one animal, returning the animal id. */
+async function seedAnimal(): Promise<string> {
+  await seedLivestockEnterprise();
+  await db.livestock.add({
+    id: 'a1',
+    createdAt: 1,
+    updatedAt: 1,
+    enterpriseId: 'e1',
+    name: 'ZA-001',
+    species: 'Cattle',
+    count: 1,
+  });
+  return 'a1';
 }
 
 describe('LivestockScreen', () => {
@@ -99,5 +115,55 @@ describe('LivestockScreen', () => {
     renderScreen();
     await screen.findByRole('button', { name: 'Register' });
     expect(screen.queryByTestId('livestock-enterprise-select')).not.toBeInTheDocument();
+  });
+
+  it('logs an event against an animal and writes it to the database (E2-02)', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.change(screen.getByTestId('event-type-select'), { target: { value: 'movement' } });
+    fireEvent.change(screen.getByTestId('event-note-input'), {
+      target: { value: 'Moved to north camp' },
+    });
+    // The row toggle now reads "Close", so "Log event" uniquely names the submit.
+    fireEvent.click(screen.getByRole('button', { name: 'Log event' }));
+
+    await screen.findByText('Event logged.');
+    const events = await db.events.toArray();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      livestockId: 'a1',
+      type: 'movement',
+      note: 'Moved to north camp',
+    });
+    // The row's meta now reflects the logged event.
+    const list = screen.getByRole('list', { name: 'Livestock' });
+    expect(list).toHaveTextContent('1 event');
+  });
+
+  it('keeps the log-event submit disabled until a note is entered', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    const form = screen.getByRole('form', { name: 'Log an event for ZA-001' });
+    const submit = within(form).getByRole('button', { name: 'Log event' });
+    // Date pre-fills to today, so the note is what remains blank.
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId('event-note-input'), { target: { value: 'Vaccinated' } });
+    expect(submit).toBeEnabled();
+  });
+
+  it('closes the event form without writing when Cancel is pressed', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByTestId('event-note-input')).not.toBeInTheDocument();
+    expect(await db.events.toArray()).toHaveLength(0);
   });
 });
