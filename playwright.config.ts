@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * The app is not built yet, so the dev server is opt-in via env var rather than
- * hardcoded to a framework's CLI. Set E2E_DEV_SERVER_COMMAND once the stack is
- * chosen (e.g. "npm run dev") and Playwright will boot it before the run.
+ * Playwright boots the app itself so a recording never fails on a server nobody
+ * started. Override with E2E_DEV_SERVER_COMMAND, or set it empty to skip booting
+ * one at all, which is what the production-deployment spec wants.
  */
-const devServerCommand = process.env.E2E_DEV_SERVER_COMMAND;
+const devServerCommand = process.env.E2E_DEV_SERVER_COMMAND ?? 'npm run dev';
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:5173';
 
 export default defineConfig({
@@ -31,7 +31,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: devServerCommand
+  webServer: devServerCommand !== ''
     ? {
         command: devServerCommand,
         url: baseURL,
