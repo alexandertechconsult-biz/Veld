@@ -21,6 +21,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E0-02  Vite + React + TypeScript scaffold with vite-plugin-pwa and Vitest  | tests: 5/5 unit, 2/2 e2e  | e2e: e2e/recordings/E0-02/20260908T162320Z  | commit: eb8cd8c
 - DONE  E0-03  Dexie schema + typed data layer  | tests: 23/23 unit  | e2e: e2e/recordings/E0-03/verification.md  | commit: 3ab566b
 - DONE  E0-04  App shell + responsive navigation  | tests: 39/39 unit, 8/8 e2e  | e2e: e2e/recordings/E0-04/20260908T164632Z  | commit: e28eb39
+- DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: <pending>
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
 
 ## In progress
@@ -31,7 +32,7 @@ _Empty._
 ## Blocked
 <!-- format: - BLOCKED  <TICKET-ID>  — <reason>  — <smallest unblocking question> -->
 
-- BLOCKED  E0-05  — Cannot deploy to Vercel from the autonomous loop: no `vercel` CLI, no `VERCEL_TOKEN` in env, no `.vercel` project link, and the Vercel MCP server needs an interactive OAuth flow unavailable in this non-interactive session. The acceptance criteria (live HTTPS production URL, preview URLs on branch push) all require an authenticated Vercel account, which the loop cannot create or authenticate to. Will not fabricate a URL or fake `verification.md`.  — How should the loop authenticate to Vercel? Either (a) set a `VERCEL_TOKEN` env var and tell me the target Vercel org/project (I'll then install the CLI, `vercel link`, deploy, and record `verification.md`), or (b) do the one-time Vercel↔GitHub connect + first deploy yourself and paste back the production + preview URLs for me to record as this ticket's evidence.
+_None._
 
 ## Log
 <!-- chronological, append-only; STARTED, DONE, BLOCKED and completion markers with timestamps -->
@@ -54,3 +55,5 @@ _Empty._
 - 2026-09-08 — STARTED E6-05. E0-05 remains human-blocked (no VERCEL_TOKEN, no CLI, no `.vercel` link — re-verified). E6-05 (export/import) depends only on E0-03 (DONE) and is the single eligible buildable P0 ticket, so the loop picks it up out of Seq order per the dependency rule.
 - 2026-09-08 — DONE E6-05. Typed backup module `src/data/backup.ts`: `exportData` snapshots all 8 tables in one read transaction into a `{format, version, exportedAt, data}` file; `parseBackup` fully validates untrusted file text (JSON, format tag, version, all 8 tables present as id-bearing arrays) before any write; `importData` clears-then-bulkAdds in one rw transaction so a failure can't half-import. DOM glue and status state isolated in `useBackup` hook (blob download deferred-revoke to avoid the sync-revoke race; `parseBackup` errors surfaced verbatim). SettingsScreen gains a Data backup section with Export/Import buttons and loading/success/error states, alongside the existing empty state (keeps E0-04 spec green). New `.btn-secondary`/`.visually-hidden`/settings CSS uses only design-system tokens (colour-guard test still passes). Vitest 52/52 (13 new: round trip, overwrite-not-merge, empty install, filename, 6 validation-failure cases incl. "does not touch DB when invalid"). Playwright 4/4 on mobile+desktop (import a crafted file → export it back → assert valid downloaded file; plus non-backup file → error alert). Typecheck + build clean, npm audit 0 vulnerabilities. Review: APPROVE_WITH_NITS (revoke-race nit applied). Evidence: e2e/recordings/E6-05/20260908T165655Z.
 - Next eligible: none on the critical path — E0-05 (Vercel deploy) stays human-blocked, and it gates GATE-0 and all of Phase 1. Phase-2 tickets E8-01/E8-02 need GATE-1. The loop cannot advance until Barrett resolves the E0-05 Vercel auth question.
+- 2026-09-08 — DONE E0-05. Vercel connected via dashboard; verified live with Playwright, 2 passed, manifest and sw.js reachable, cream token intact in built CSS.
+- 2026-09-08 — GATE-0 reached. Awaiting human verification on a real device before Phase 1.
