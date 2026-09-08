@@ -200,6 +200,10 @@ Decided 2026-09-08, ahead of the first build iteration. Recorded here because th
 Priority key: **P0** = MVP-critical, **P1** = MVP-important, **P2** = post-MVP
 Estimate: T-shirt sizes (S / M / L)
 
+**Phase gates are dependencies, not suggestions.** Every ticket in a phase lists its
+preceding gate in `Depends`. Without that, a ticket whose only other dependency happens to
+be satisfied can run many phases early, which is exactly what happened to E6-05.
+
 **How the loop reads this section.** `Seq` is the build order and breaks every priority tie, so the loop always has exactly one correct next ticket. `Depends` must all be `DONE` in `PROGRESS.md` before a ticket is eligible. `GATE-n` rows are human checkpoints: the loop must not attempt them. On reaching a gate it appends `BLOCKED: GATE-n — awaiting human verification` to `PROGRESS.md` and stops.
 
 ### Phase 0: Foundation
@@ -243,7 +247,7 @@ The vertical slice that proves the concept. Every ticket here is P0.
 |---|---|---|---|---|---|---|
 | E8-01 | 22 | GATE-1 | As Barrett, I want a pre-populated demo farm so I can show the concept without the farmer's real data | Seed data loads a sample enterprise, several animals and fields, and a few days of realistic events | P0 | S |
 | E8-02 | 23 | E8-01, E0-05 | As Barrett, I want the demo to work on my phone with no setup friction in front of the farmer | Installable PWA loads demo data on first open with one tap; airplane-mode logging works, per the Section 12 demo flow | P0 | S |
-| E6-05 | 24 | E0-03 | As a farmer, I want to export my data so a lost phone doesn't mean lost records | Export writes every entity to a single file; import restores it to an empty install; round-trip covered by a test | P0 | M |
+| E6-05 | 24 | GATE-1, E0-03 | As a farmer, I want to export my data so a lost phone doesn't mean lost records | Export writes every entity to a single file; import restores it to an empty install; round-trip covered by a test | P0 | M |
 | **GATE-2** | 25 | E8-01, E8-02, E6-05 | Human checkpoint | Barrett runs the full Section 12 demo flow, airplane mode included, before it goes in front of the farmer | — | — |
 
 ### Phase 3: Polish
@@ -253,13 +257,13 @@ Everything P1. Build only after the farmer has seen it, so real feedback can reo
 | ID | Seq | Depends | User Story | Acceptance Criteria | Priority | Est. |
 |---|---|---|---|---|---|---|
 | E7-03 | 26 | GATE-2 | As a farmer, I want today's and overdue tasks on the home screen | Home surfaces open tasks due today or overdue | P1 | S |
-| E5-02 | 27 | E5-01 | As a farmer, I want a running total per enterprise and overall | Sum display only, no charts | P1 | S |
-| E5-03 | 28 | E5-01 | As a farmer, I want to edit or delete a transaction I logged in error | Edit and delete from the transaction list | P1 | S |
-| E2-04 | 29 | E2-02 | As a farmer, I want to attach a photo to an event, for example an injury | Photo stored in IndexedDB alongside the event and included in export | P1 | M |
-| E3-04 | 30 | E3-02 | As a farmer, I want to attach a photo to an activity, for example crop damage | Photo stored in IndexedDB alongside the activity and included in export | P1 | M |
-| E2-05 | 31 | E2-01 | As a farmer, I want to search and filter my livestock list | Search by name or tag; filter by species | P1 | S |
-| E1-04 | 32 | E1-02 | As a farmer, I want to edit or remove an enterprise later | Edit and delete from Settings; delete requires confirmation | P1 | S |
-| E6-06 | 33 | E6-05 | As a farmer, I want to be warned before an import overwrites what's there | Import shows what will be replaced and requires confirmation | P1 | S |
+| E5-02 | 27 | GATE-2, E5-01 | As a farmer, I want a running total per enterprise and overall | Sum display only, no charts | P1 | S |
+| E5-03 | 28 | GATE-2, E5-01 | As a farmer, I want to edit or delete a transaction I logged in error | Edit and delete from the transaction list | P1 | S |
+| E2-04 | 29 | GATE-2, E2-02 | As a farmer, I want to attach a photo to an event, for example an injury | Photo stored in IndexedDB alongside the event and included in export | P1 | M |
+| E3-04 | 30 | GATE-2, E3-02 | As a farmer, I want to attach a photo to an activity, for example crop damage | Photo stored in IndexedDB alongside the activity and included in export | P1 | M |
+| E2-05 | 31 | GATE-2, E2-01 | As a farmer, I want to search and filter my livestock list | Search by name or tag; filter by species | P1 | S |
+| E1-04 | 32 | GATE-2, E1-02 | As a farmer, I want to edit or remove an enterprise later | Edit and delete from Settings; delete requires confirmation | P1 | S |
+| E6-06 | 33 | GATE-2, E6-05 | As a farmer, I want to be warned before an import overwrites what's there | Import shows what will be replaced and requires confirmation | P1 | S |
 
 ### Deferred from the original backlog
 
