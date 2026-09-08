@@ -233,8 +233,8 @@ The vertical slice that proves the concept. Every ticket here is P0.
 |---|---|---|---|---|---|---|
 | E8-01 | 22 | GATE-1 | As Barrett, I want a pre-populated demo farm so I can show the concept without the farmer's real data | Seed data loads a sample enterprise, several animals and fields, and a few days of realistic events | P0 | S |
 | E8-02 | 23 | E8-01, E0-05 | As Barrett, I want the demo to work on my phone with no setup friction in front of the farmer | Installable PWA loads demo data on first open with one tap; airplane-mode logging works, per the Section 12 demo flow | P0 | S |
-| E6-02 | 24 | E0-03 | As a farmer, I want to export my data so a lost phone doesn't mean lost records | Export writes every entity to a single file; import restores it to an empty install; round-trip covered by a test | P0 | M |
-| **GATE-2** | 25 | E8-01, E8-02, E6-02 | Human checkpoint | Barrett runs the full Section 12 demo flow, airplane mode included, before it goes in front of the farmer | — | — |
+| E6-05 | 24 | E0-03 | As a farmer, I want to export my data so a lost phone doesn't mean lost records | Export writes every entity to a single file; import restores it to an empty install; round-trip covered by a test | P0 | M |
+| **GATE-2** | 25 | E8-01, E8-02, E6-05 | Human checkpoint | Barrett runs the full Section 12 demo flow, airplane mode included, before it goes in front of the farmer | — | — |
 
 ### Phase 3: Polish
 
@@ -249,7 +249,7 @@ Everything P1. Build only after the farmer has seen it, so real feedback can reo
 | E3-04 | 30 | E3-02 | As a farmer, I want to attach a photo to an activity, for example crop damage | Photo stored in IndexedDB alongside the activity and included in export | P1 | M |
 | E2-05 | 31 | E2-01 | As a farmer, I want to search and filter my livestock list | Search by name or tag; filter by species | P1 | S |
 | E1-04 | 32 | E1-02 | As a farmer, I want to edit or remove an enterprise later | Edit and delete from Settings; delete requires confirmation | P1 | S |
-| E6-03 | 33 | E6-02 | As a farmer, I want to be warned before an import overwrites what's there | Import shows what will be replaced and requires confirmation | P1 | S |
+| E6-06 | 33 | E6-05 | As a farmer, I want to be warned before an import overwrites what's there | Import shows what will be replaced and requires confirmation | P1 | S |
 
 ### Deferred from the original backlog
 
@@ -258,7 +258,7 @@ Removed from MVP by the Section 9 decisions. Recorded so the loop does not resur
 | Original ID | Was | Why it's gone |
 |---|---|---|
 | E6-01 | Every action works with no signal | Folded into E0-03. With Dexie and no server, local-first is the only write path that exists, so it is not a separate ticket |
-| E6-02 | Background sync on reconnect | Cut with the sync decision. Replaced by export and import |
+| E6-02 | Background sync on reconnect | Cut with the sync decision. Replaced by export and import, which are new tickets E6-05 and E6-06 |
 | E6-03 | Pending-sync indicator | Nothing to sync, so nothing to indicate |
 | E6-04 | Conflict handling, last-write-wins | No second writer and no server, so no conflicts are possible |
 | E4-03 | Today's and overdue tasks on home | Kept, renumbered to E7-03 because it is a Home screen change, not a Tasks one |
