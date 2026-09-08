@@ -21,7 +21,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E0-02  Vite + React + TypeScript scaffold with vite-plugin-pwa and Vitest  | tests: 5/5 unit, 2/2 e2e  | e2e: e2e/recordings/E0-02/20260908T162320Z  | commit: eb8cd8c
 - DONE  E0-03  Dexie schema + typed data layer  | tests: 23/23 unit  | e2e: e2e/recordings/E0-03/verification.md  | commit: 3ab566b
 - DONE  E0-04  App shell + responsive navigation  | tests: 39/39 unit, 8/8 e2e  | e2e: e2e/recordings/E0-04/20260908T164632Z  | commit: e28eb39
-- DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: <pending>
+- DONE  E0-05  Deploy to Vercel — https://veld-six.vercel.app/  | tests: n/a (infra)  | e2e: e2e/recordings/E0-05/verification.md  | commit: 6550d34
 - DONE  E6-05  Export/import all farm data to a single file  | tests: 52/52 unit, 4/4 e2e  | e2e: e2e/recordings/E6-05/20260908T165655Z  | commit: 04c819b
 
 ## In progress
