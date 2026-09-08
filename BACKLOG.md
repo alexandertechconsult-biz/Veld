@@ -163,6 +163,16 @@ Transaction
 - Icons over text labels where possible for fast recognition
 - No modal-heavy flows — prefer full-screen or bottom-sheet quick-add over stacked dialogs
 
+### 8.4 Design system
+
+The direction above is realised in `.superdesign/design-system.md`, which is the single
+source of visual truth: light and dark palettes with every contrast ratio measured, Inter
+as the only typeface, the 4/8/12/16/24/32/48 spacing scale, and specs for every component
+the five screens need. Build against that file. Do not invent a colour, size or font.
+
+Reference draft of Home and quick-add:
+https://p.superdesign.dev/draft/bab56d65-3ade-4906-b15f-bdd89ea0025e
+
 ---
 
 ## 9. Technical Decisions
@@ -201,7 +211,7 @@ Nothing in Epics 1 to 8 can be built before this phase. The original backlog had
 | E0-01 | 1 | — | As a developer, I want an E2E harness that records durable evidence, so tickets can be proven done | Playwright configured with trace and video on; `record_e2e.sh <ID> --ui` writes `trace.zip`, `video.webm` and a log under `e2e/recordings/<ID>/`; canary spec passes on mobile and desktop projects | P0 | M |
 | E0-02 | 2 | E0-01 | As a developer, I want the app scaffold so there is something to build into | Vite + React + TypeScript app boots; `vite-plugin-pwa` emits a manifest and service worker on build; Vitest runs and passes one real unit test; `E2E_DEV_SERVER_COMMAND` documented in README | P0 | M |
 | E0-03 | 3 | E0-02 | As a developer, I want the Dexie schema and a typed data layer, so every module writes through one place | Schema covers Farm, Enterprise, LivestockRecord, Field, Event, Activity, Task, Transaction per Section 6; all reads and writes go through typed repository functions; no `any`; data survives reload and a device restart; unit tests cover create, read, update, delete per entity | P0 | L |
-| E0-04 | 4 | E0-03 | As a farmer, I want the app shell and navigation so I can move between modules | Bottom tab bar below 768px, left sidebar at 768px and above; five destinations per Section 8.1; tap targets 44px minimum; earth-tone palette tokens defined once; every route renders a useful empty state, no blank screens | P0 | M |
+| E0-04 | 4 | E0-03 | As a farmer, I want the app shell and navigation so I can move between modules | Implements `.superdesign/design-system.md` exactly: both theme token sets on `:root` with the dark set under `prefers-color-scheme` and `[data-theme]`, Inter self-hosted so it works offline, the 4/8/12/16/24/32/48 scale. Bottom tab bar below 768px, left sidebar at 768px and above; five destinations per Section 8.1; tap targets 44px minimum, 56px for primary actions; every route renders a useful empty state, no blank screens. A test asserts no colour outside the token tables appears in built CSS | P0 | M |
 | E0-05 | 5 | E0-02 | As Barrett, I want the app deployed so I can open it on my phone in front of the farmer | Production URL serves over HTTPS and passes an install prompt on Android Chrome; branch pushes produce preview URLs; `verification.md` records the commands run and the observed result | P0 | S |
 | **GATE-0** | 6 | E0-01…E0-05 | Human checkpoint | Barrett opens the deployed shell on his own phone and confirms navigation and install work before any feature work starts | — | — |
 
