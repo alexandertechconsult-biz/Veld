@@ -30,7 +30,7 @@ _Empty._
 _None._
 
 ## Log
-<!-- chronological, append-only; STARTED/DONE/BLOCKED/ALL CLEAR markers with timestamps -->
+<!-- chronological, append-only; STARTED, DONE, BLOCKED and completion markers with timestamps -->
 
 - 2026-09-08 — repo initialised, ledger created.
 - 2026-09-08 — stack decisions recorded in BACKLOG.md Section 9; backlog restructured into phases with Seq ordering, explicit dependencies, and gates.

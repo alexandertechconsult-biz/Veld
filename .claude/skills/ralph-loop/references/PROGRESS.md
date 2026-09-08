@@ -15,4 +15,4 @@
 <!-- format: - BLOCKED  <TICKET-ID>  — <reason>  — <smallest unblocking question> -->
 
 ## Log
-<!-- chronological, append-only; STARTED/DONE/BLOCKED/ALL CLEAR markers with timestamps -->
+<!-- chronological, append-only; STARTED, DONE, BLOCKED and completion markers with timestamps -->
