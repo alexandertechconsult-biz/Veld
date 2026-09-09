@@ -334,6 +334,8 @@ describe('LivestockScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(async () => expect(await db.events.toArray()).toHaveLength(0));
-    expect(screen.getByText('No events logged yet.')).toBeInTheDocument();
+    // Wait for the reload-driven re-render before asserting the empty state, so
+    // the assertion never races the delete's re-render (was intermittently red).
+    expect(await screen.findByText('No events logged yet.')).toBeInTheDocument();
   });
 });

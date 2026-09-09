@@ -117,4 +117,70 @@ describe('CropsScreen', () => {
     await screen.findByRole('button', { name: 'Register' });
     expect(screen.getByTestId('field-enterprise-select')).toBeInTheDocument();
   });
+
+  /** Seed a farm, crop enterprise and one field, returning the field id. */
+  async function seedField(): Promise<string> {
+    await seedCropEnterprise();
+    await db.fields.add({
+      id: 'field1',
+      createdAt: 1,
+      updatedAt: 1,
+      enterpriseId: 'e1',
+      name: 'North field',
+      cropType: 'Maize',
+    });
+    return 'field1';
+  }
+
+  it('logs an activity against a field and shows the activity count (E3-02)', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.change(screen.getByTestId('activity-note-input'), {
+      target: { value: 'Planted maize' },
+    });
+    // With the panel open the toggle reads "Close", so the only "Log activity"
+    // button left is the form's submit.
+    fireEvent.click(screen.getByRole('button', { name: 'Log activity' }));
+
+    await screen.findByText('Activity logged.');
+    const stored = await db.activities.toArray();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({ fieldId: 'field1', type: 'planting', note: 'Planted maize' });
+    // The row's meta line now shows the running count.
+    expect(await screen.findByText(/1 activity/)).toBeInTheDocument();
+  });
+
+  it('disables Log activity until a note is entered', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    // With the panel open the toggle reads "Close", so the remaining
+    // "Log activity" button is the form's submit — disabled until a note exists.
+    const submit = screen.getByRole('button', { name: 'Log activity' });
+    expect(submit).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId('activity-note-input'), {
+      target: { value: 'Sprayed herbicide' },
+    });
+    expect(submit).toBeEnabled();
+  });
+
+  it('does not write an activity when the form is cancelled', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.change(screen.getByTestId('activity-note-input'), {
+      target: { value: 'Draft note' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('activity-note-input')).not.toBeInTheDocument(),
+    );
+    expect(await db.activities.toArray()).toHaveLength(0);
+  });
 });

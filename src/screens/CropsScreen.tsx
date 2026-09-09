@@ -3,23 +3,33 @@ import { Sprout } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { useNavigate } from '../app/navigationContext';
 import { useFields } from './useFields';
-
-const ICON_SIZE = 24;
-const ICON_STROKE = 1.5;
+import type { ActivityFormValues } from './ActivityForm';
+import FieldRow from './FieldRow';
 
 /**
  * Crops module. Register a field or block (E3-01) — name, crop type, and an
- * optional free-text size — against a crop enterprise. Activity logging (E3-02),
- * history (E3-03) and edit/delete (E3-05) arrive in later tickets.
+ * optional free-text size — against a crop enterprise, and log a dated activity
+ * against any of them (E3-02). Activity history (E3-03) and edit/delete (E3-05)
+ * arrive in later tickets.
  */
 export default function CropsScreen() {
   const navigate = useNavigate();
-  const { enterprises, fields, status, registerField } = useFields();
+  const {
+    enterprises,
+    fields,
+    activityCounts,
+    status,
+    activityStatus,
+    registerField,
+    logActivity,
+    resetActivityStatus,
+  } = useFields();
 
   const [enterpriseId, setEnterpriseId] = useState('');
   const [name, setName] = useState('');
   const [cropType, setCropType] = useState('');
   const [size, setSize] = useState('');
+  const [openActivityFor, setOpenActivityFor] = useState<string | null>(null);
 
   // Default the enterprise picker to the first crop enterprise once loaded.
   useEffect(() => {
@@ -61,6 +71,20 @@ export default function CropsScreen() {
     }
   }
 
+  function toggleRow(id: string) {
+    const willOpen = openActivityFor !== id;
+    if (willOpen) resetActivityStatus();
+    setOpenActivityFor(willOpen ? id : null);
+  }
+
+  async function onLogActivity(fieldId: string, values: ActivityFormValues): Promise<boolean> {
+    const logged = await logActivity({ fieldId, ...values });
+    if (logged) {
+      setOpenActivityFor(null);
+    }
+    return logged;
+  }
+
   return (
     <section className="module" aria-labelledby="crops-heading">
       <h2 id="crops-heading" className="module__title">
@@ -75,21 +99,24 @@ export default function CropsScreen() {
       ) : (
         <ul className="record-list" aria-label="Fields">
           {fields.map((field) => (
-            <li key={field.id} className="record-row">
-              <div className="record-row__main">
-                <Sprout size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
-                <span className="record-row__text">
-                  <span className="record-row__name">{field.name}</span>
-                  <span className="record-row__meta">
-                    {field.cropType}
-                    {field.size ? ` · ${field.size}` : ''}
-                  </span>
-                </span>
-              </div>
-            </li>
+            <FieldRow
+              key={field.id}
+              field={field}
+              activityCount={activityCounts[field.id] ?? 0}
+              activityStatus={activityStatus}
+              isOpen={openActivityFor === field.id}
+              onToggle={() => toggleRow(field.id)}
+              onLogActivity={(values) => onLogActivity(field.id, values)}
+            />
           ))}
         </ul>
       )}
+
+      {activityStatus.kind === 'saved' && openActivityFor === null ? (
+        <p className="settings-status settings-status--success" role="status">
+          Activity logged.
+        </p>
+      ) : null}
 
       <form className="farm-form" onSubmit={onSubmit}>
         {enterprises.length > 1 ? (
