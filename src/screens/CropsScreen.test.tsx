@@ -277,7 +277,9 @@ describe('CropsScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(async () => expect(await db.fields.toArray()).toHaveLength(0));
-    expect(screen.queryByRole('list', { name: 'Fields' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('list', { name: 'Fields' })).not.toBeInTheDocument(),
+    );
   });
 
   it('deleting a field removes its activities too (E3-05)', async () => {
