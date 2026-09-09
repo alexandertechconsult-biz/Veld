@@ -2,11 +2,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   EmptyCropTypeError,
   EmptyFieldNameError,
+  FieldNotFoundError,
   NoCropEnterpriseError,
   addField,
+  deleteField,
   listCropEnterprises,
   listFields,
+  updateField,
 } from './fields';
+import { addActivity, listActivitiesFor } from './activities';
 import { addEnterprise } from './enterprises';
 import { saveFarmProfile } from './farmProfile';
 import { freshContext, type TestContext } from './testSupport';
@@ -155,5 +159,152 @@ describe('listFields', () => {
     const list = await listFields(ctx.repos);
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe('North field');
+  });
+});
+
+describe('updateField', () => {
+  /** Register a field with a size, returning it for the correction tests. */
+  async function seedField() {
+    const crop = await addEnterprise(ctx.repos, 'Maize block', 'crop');
+    return addField(ctx.repos, {
+      enterpriseId: crop.id,
+      name: 'North field',
+      cropType: 'Maize',
+      size: '12 ha',
+    });
+  }
+
+  it('corrects the name, crop type and size', async () => {
+    const field = await seedField();
+    const updated = await updateField(ctx.repos, field.id, {
+      name: 'North paddock',
+      cropType: 'Wheat',
+      size: '15 ha',
+    });
+
+    expect(updated.name).toBe('North paddock');
+    expect(updated.cropType).toBe('Wheat');
+    expect(updated.size).toBe('15 ha');
+  });
+
+  it('leaves fields that are not supplied untouched', async () => {
+    const field = await seedField();
+    const updated = await updateField(ctx.repos, field.id, { name: 'Renamed' });
+
+    expect(updated.name).toBe('Renamed');
+    expect(updated.cropType).toBe('Maize');
+    expect(updated.size).toBe('12 ha');
+  });
+
+  it('clears the optional size when a blank size is supplied', async () => {
+    const field = await seedField();
+    const updated = await updateField(ctx.repos, field.id, { size: '   ' });
+    expect(updated.size).toBeUndefined();
+  });
+
+  it('trims a corrected name and rejects a blank one without writing', async () => {
+    const field = await seedField();
+    const trimmed = await updateField(ctx.repos, field.id, { name: '  River block  ' });
+    expect(trimmed.name).toBe('River block');
+
+    await expect(updateField(ctx.repos, field.id, { name: '   ' })).rejects.toBeInstanceOf(
+      EmptyFieldNameError,
+    );
+    // The last good value is still in place.
+    const fields = await listFields(ctx.repos);
+    expect(fields[0].name).toBe('River block');
+  });
+
+  it('rejects a blank crop type without writing', async () => {
+    const field = await seedField();
+    await expect(updateField(ctx.repos, field.id, { cropType: '  ' })).rejects.toBeInstanceOf(
+      EmptyCropTypeError,
+    );
+    const fields = await listFields(ctx.repos);
+    expect(fields[0].cropType).toBe('Maize');
+  });
+
+  it('refuses to update a field that does not exist', async () => {
+    await expect(updateField(ctx.repos, 'nope', { name: 'X' })).rejects.toBeInstanceOf(
+      FieldNotFoundError,
+    );
+  });
+
+  it('persists a correction across a close and reopen', async () => {
+    const field = await seedField();
+    await updateField(ctx.repos, field.id, { name: 'Corrected' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const fields = await listFields(ctx.repos);
+    expect(fields[0].name).toBe('Corrected');
+  });
+});
+
+describe('deleteField', () => {
+  /** Register a field with two activities, returning its id. */
+  async function seedFieldWithActivities(): Promise<string> {
+    const crop = await addEnterprise(ctx.repos, 'Maize block', 'crop');
+    const field = await addField(ctx.repos, {
+      enterpriseId: crop.id,
+      name: 'North field',
+      cropType: 'Maize',
+    });
+    await addActivity(ctx.repos, {
+      fieldId: field.id,
+      date: Date.UTC(2026, 8, 1),
+      type: 'planting',
+      note: 'Planted',
+    });
+    await addActivity(ctx.repos, {
+      fieldId: field.id,
+      date: Date.UTC(2026, 8, 8),
+      type: 'harvest',
+      note: 'Harvested',
+    });
+    return field.id;
+  }
+
+  it('removes the field record', async () => {
+    const id = await seedFieldWithActivities();
+    await deleteField(ctx.repos, id);
+    expect(await listFields(ctx.repos)).toHaveLength(0);
+  });
+
+  it('removes the activities logged against the deleted field', async () => {
+    const id = await seedFieldWithActivities();
+    await deleteField(ctx.repos, id);
+    expect(await listActivitiesFor(ctx.repos, id)).toHaveLength(0);
+  });
+
+  it('leaves other fields and their activities in place', async () => {
+    const crop = await addEnterprise(ctx.repos, 'Maize block', 'crop');
+    const target = await addField(ctx.repos, {
+      enterpriseId: crop.id,
+      name: 'Target field',
+      cropType: 'Maize',
+    });
+    const survivor = await addField(ctx.repos, {
+      enterpriseId: crop.id,
+      name: 'Survivor field',
+      cropType: 'Wheat',
+    });
+    await addActivity(ctx.repos, {
+      fieldId: survivor.id,
+      date: Date.UTC(2026, 8, 8),
+      type: 'input',
+      note: 'Sprayed',
+    });
+
+    await deleteField(ctx.repos, target.id);
+
+    const fields = await listFields(ctx.repos);
+    expect(fields.map((f) => f.id)).toEqual([survivor.id]);
+    expect(await listActivitiesFor(ctx.repos, survivor.id)).toHaveLength(1);
+  });
+
+  it('is a no-op for a field that does not exist', async () => {
+    await expect(deleteField(ctx.repos, 'nope')).resolves.toBeUndefined();
   });
 });

@@ -1,22 +1,30 @@
 import { useCallback, useEffect, useState } from 'react';
 import { repositories } from '../data';
-import type { Activity, Enterprise, Field } from '../data';
+import type { Activity, Enterprise, Field, ID } from '../data';
 import {
   EmptyCropTypeError,
   EmptyFieldNameError,
+  FieldNotFoundError,
   NoCropEnterpriseError,
   addField,
+  deleteField,
   listCropEnterprises,
   listFields,
+  updateField,
+  type FieldEdit,
   type NewField,
 } from '../data/fields';
 import {
+  ActivityNotFoundError,
   EmptyActivityNoteError,
   InvalidActivityDateError,
   InvalidActivityTypeError,
   NoFieldError,
   addActivity,
+  deleteActivity,
   listActivitiesFor,
+  updateActivity,
+  type ActivityEdit,
   type NewActivity,
 } from '../data/activities';
 
@@ -54,10 +62,12 @@ function messageFor(error: unknown, fallback: string): string {
   return error instanceof EmptyFieldNameError ||
     error instanceof EmptyCropTypeError ||
     error instanceof NoCropEnterpriseError ||
+    error instanceof FieldNotFoundError ||
     error instanceof EmptyActivityNoteError ||
     error instanceof InvalidActivityDateError ||
     error instanceof InvalidActivityTypeError ||
-    error instanceof NoFieldError
+    error instanceof NoFieldError ||
+    error instanceof ActivityNotFoundError
     ? error.message
     : fallback;
 }
@@ -129,6 +139,46 @@ export function useFields() {
     [reload],
   );
 
+  /** Returns true when the edit saved, so the edit form can close itself (E3-05). */
+  const editField = useCallback(
+    async (id: ID, changes: FieldEdit): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await updateField(repositories, id, changes);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Changes saved.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not update the field. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  /** Returns true when the field (and its activities) were removed (E3-05). */
+  const removeField = useCallback(
+    async (id: ID): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await deleteField(repositories, id);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Field removed.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not delete the field. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
   /** Returns true when the activity was logged, so the form can close itself. */
   const logActivity = useCallback(
     async (input: NewActivity): Promise<boolean> => {
@@ -149,6 +199,46 @@ export function useFields() {
     [reload],
   );
 
+  /** Returns true when the activity edit saved, so its form can close (E3-05). */
+  const editActivity = useCallback(
+    async (id: ID, changes: ActivityEdit): Promise<boolean> => {
+      setActivityStatus({ kind: 'saving' });
+      try {
+        await updateActivity(repositories, id, changes);
+        await reload();
+        setActivityStatus({ kind: 'saved' });
+        return true;
+      } catch (error) {
+        setActivityStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not update the activity. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  /** Returns true when the activity was removed (E3-05). */
+  const removeActivity = useCallback(
+    async (id: ID): Promise<boolean> => {
+      setActivityStatus({ kind: 'saving' });
+      try {
+        await deleteActivity(repositories, id);
+        await reload();
+        setActivityStatus({ kind: 'saved' });
+        return true;
+      } catch (error) {
+        setActivityStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not delete the activity. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
   /** Clear any prior activity status, so a freshly opened form starts clean. */
   const resetActivityStatus = useCallback(() => {
     setActivityStatus({ kind: 'idle' });
@@ -161,7 +251,11 @@ export function useFields() {
     status,
     activityStatus,
     registerField,
+    editField,
+    removeField,
     logActivity,
+    editActivity,
+    removeActivity,
     resetActivityStatus,
   };
 }

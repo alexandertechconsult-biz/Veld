@@ -256,7 +256,9 @@ describe('LivestockScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
     await waitFor(async () => expect(await db.livestock.toArray()).toHaveLength(0));
-    expect(screen.queryByRole('list', { name: 'Livestock' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('list', { name: 'Livestock' })).not.toBeInTheDocument(),
+    );
   });
 
   it('deleting an animal removes its events too (E2-06)', async () => {

@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e4-01-tasks.spec.ts:11:1 › creates tasks that persist across a reload @E4-01 (1.5s)
+  ✓  2 [desktop-chromium] › e2e/specs/e4-01-tasks.spec.ts:11:1 › creates tasks that persist across a reload @E4-01 (1.1s)
+
+  2 passed (4.9s)
