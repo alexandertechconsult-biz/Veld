@@ -37,7 +37,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E4-01  Create a task  | tests: 221/221 unit, 2/2 e2e  | e2e: e2e/recordings/E4-01/20260909T121650Z  | commit: 23e0301
 - DONE  E4-02  Mark a task done  | tests: 228/228 unit, 2/2 e2e  | e2e: e2e/recordings/E4-02/20260909T122304Z  | commit: 58c4aa7
 - DONE  E4-03  Edit or delete a task (reopen a done one)  | tests: 250/250 unit, 2/2 e2e  | e2e: e2e/recordings/E4-03/20260909T123117Z  | commit: ebc7a80
-- DONE  E5-01  Log a cost or sale  | tests: 271/271 unit, 2/2 e2e  | e2e: e2e/recordings/E5-01/20260909T123840Z  | commit: <pending>
+- DONE  E5-01  Log a cost or sale  | tests: 271/271 unit, 2/2 e2e  | e2e: e2e/recordings/E5-01/20260909T123840Z  | commit: 8e57660
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
