@@ -219,4 +219,121 @@ describe('LivestockScreen', () => {
     const history = screen.getByRole('list', { name: 'Event history for ZA-001' });
     expect(history).toHaveTextContent('Vaccinated for lumpy skin');
   });
+
+  it('corrects an animal record (E2-06)', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit animal' }));
+
+    fireEvent.change(screen.getByTestId('livestock-edit-name-input'), {
+      target: { value: 'ZA-009' },
+    });
+    fireEvent.change(screen.getByTestId('livestock-edit-count-input'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    await screen.findByText('Changes saved.');
+    const list = screen.getByRole('list', { name: 'Livestock' });
+    expect(list).toHaveTextContent('ZA-009');
+    expect(list).toHaveTextContent('Group of 20');
+    const stored = await db.livestock.get('a1');
+    expect(stored).toMatchObject({ name: 'ZA-009', count: 20 });
+  });
+
+  it('confirms and names the animal before deleting it (E2-06)', async () => {
+    await seedAnimal();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete animal' }));
+
+    // The confirmation names exactly what is being removed.
+    expect(screen.getByText("Delete ZA-001? This can't be undone.")).toBeInTheDocument();
+    // Nothing is gone until the farmer confirms.
+    expect(await db.livestock.toArray()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.livestock.toArray()).toHaveLength(0));
+    expect(screen.queryByRole('list', { name: 'Livestock' })).not.toBeInTheDocument();
+  });
+
+  it('deleting an animal removes its events too (E2-06)', async () => {
+    await seedAnimal();
+    await db.events.add({
+      id: 'ev1',
+      createdAt: 1,
+      updatedAt: 1,
+      livestockId: 'a1',
+      date: Date.parse('2026-09-08'),
+      type: 'health',
+      note: 'Vaccinated',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete animal' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.livestock.toArray()).toHaveLength(0));
+    expect(await db.events.toArray()).toHaveLength(0);
+  });
+
+  it('corrects an event note and keeps its original date (E2-06)', async () => {
+    await seedAnimal();
+    const date = Date.parse('2026-09-08');
+    await db.events.add({
+      id: 'ev1',
+      createdAt: 1,
+      updatedAt: 1,
+      livestockId: 'a1',
+      date,
+      type: 'health',
+      note: 'Vaccinated',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit event' }));
+
+    const editForm = screen.getByRole('form', { name: 'Edit Health event for ZA-001' });
+    fireEvent.change(within(editForm).getByTestId('event-note-input'), {
+      target: { value: 'Vaccinated for lumpy skin' },
+    });
+    fireEvent.click(within(editForm).getByRole('button', { name: 'Save event' }));
+
+    await waitFor(async () => {
+      const stored = await db.events.get('ev1');
+      expect(stored?.note).toBe('Vaccinated for lumpy skin');
+    });
+    // The date is untouched because only the note was corrected.
+    expect((await db.events.get('ev1'))?.date).toBe(date);
+  });
+
+  it('confirms and names the event before deleting it (E2-06)', async () => {
+    await seedAnimal();
+    await db.events.add({
+      id: 'ev1',
+      createdAt: 1,
+      updatedAt: 1,
+      livestockId: 'a1',
+      date: Date.parse('2026-09-08'),
+      type: 'health',
+      note: 'Vaccinated',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log event' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete event' }));
+
+    // The confirmation names the event (type and date) being removed.
+    expect(screen.getByText(/Delete this Health event from/)).toBeInTheDocument();
+    expect(await db.events.toArray()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.events.toArray()).toHaveLength(0));
+    expect(screen.getByText('No events logged yet.')).toBeInTheDocument();
+  });
 });

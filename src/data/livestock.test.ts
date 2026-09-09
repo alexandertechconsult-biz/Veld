@@ -3,16 +3,20 @@ import {
   EmptyLivestockNameError,
   EmptySpeciesError,
   InvalidCountError,
+  LivestockNotFoundError,
   NoLivestockEnterpriseError,
   addLivestock,
+  deleteLivestock,
   describeLivestock,
   listLivestock,
   listLivestockEnterprises,
+  updateLivestock,
 } from './livestock';
+import { addEvent, listEventsFor } from './events';
 import { addEnterprise } from './enterprises';
 import { saveFarmProfile } from './farmProfile';
 import { freshContext, type TestContext } from './testSupport';
-import type { LivestockRecord } from './types';
+import type { ID, LivestockRecord } from './types';
 
 let ctx: TestContext;
 
@@ -196,5 +200,120 @@ describe('listLivestock', () => {
     const list = await listLivestock(ctx.repos);
     expect(list).toHaveLength(1);
     expect(list[0].name).toBe('ZA-001');
+  });
+});
+
+/** Seed a livestock enterprise with one animal, returning its id. */
+async function seedAnimal(name = 'ZA-001', count = 1): Promise<ID> {
+  const herd = await addEnterprise(ctx.repos, 'Beef herd', 'livestock');
+  const animal = await addLivestock(ctx.repos, {
+    enterpriseId: herd.id,
+    name,
+    species: 'Cattle',
+    count,
+  });
+  return animal.id;
+}
+
+describe('updateLivestock', () => {
+  it('corrects the name, species and count', async () => {
+    const id = await seedAnimal();
+    const updated = await updateLivestock(ctx.repos, id, {
+      name: 'ZA-002',
+      species: 'Sheep',
+      count: 12,
+    });
+
+    expect(updated.name).toBe('ZA-002');
+    expect(updated.species).toBe('Sheep');
+    expect(updated.count).toBe(12);
+    expect(describeLivestock(updated).kind).toBe('group');
+  });
+
+  it('leaves fields that are not supplied untouched', async () => {
+    const id = await seedAnimal('ZA-001', 5);
+    const updated = await updateLivestock(ctx.repos, id, { name: 'Renamed' });
+
+    expect(updated.name).toBe('Renamed');
+    expect(updated.species).toBe('Cattle');
+    expect(updated.count).toBe(5);
+  });
+
+  it('trims a corrected name and rejects a blank one without writing', async () => {
+    const id = await seedAnimal('ZA-001');
+    const trimmed = await updateLivestock(ctx.repos, id, { name: '  ZA-009  ' });
+    expect(trimmed.name).toBe('ZA-009');
+
+    await expect(updateLivestock(ctx.repos, id, { name: '   ' })).rejects.toBeInstanceOf(
+      EmptyLivestockNameError,
+    );
+    // The last good value is still in place.
+    const animals = await listLivestock(ctx.repos);
+    expect(animals[0].name).toBe('ZA-009');
+  });
+
+  it('rejects a blank species and an invalid count without writing', async () => {
+    const id = await seedAnimal();
+    await expect(updateLivestock(ctx.repos, id, { species: '  ' })).rejects.toBeInstanceOf(
+      EmptySpeciesError,
+    );
+    await expect(updateLivestock(ctx.repos, id, { count: 0 })).rejects.toBeInstanceOf(
+      InvalidCountError,
+    );
+    await expect(updateLivestock(ctx.repos, id, { count: 2.5 })).rejects.toBeInstanceOf(
+      InvalidCountError,
+    );
+    const animals = await listLivestock(ctx.repos);
+    expect(animals[0]).toMatchObject({ species: 'Cattle', count: 1 });
+  });
+
+  it('refuses to update a record that does not exist', async () => {
+    await expect(updateLivestock(ctx.repos, 'nope', { name: 'X' })).rejects.toBeInstanceOf(
+      LivestockNotFoundError,
+    );
+  });
+
+  it('persists a correction across a close and reopen', async () => {
+    const id = await seedAnimal();
+    await updateLivestock(ctx.repos, id, { name: 'Corrected' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const animals = await listLivestock(ctx.repos);
+    expect(animals[0].name).toBe('Corrected');
+  });
+});
+
+describe('deleteLivestock', () => {
+  it('removes the record', async () => {
+    const id = await seedAnimal();
+    await deleteLivestock(ctx.repos, id);
+    expect(await listLivestock(ctx.repos)).toHaveLength(0);
+  });
+
+  it('removes the events logged against the deleted record', async () => {
+    const id = await seedAnimal();
+    await addEvent(ctx.repos, { livestockId: id, date: Date.UTC(2026, 8, 8), type: 'health', note: 'Checked' });
+    await addEvent(ctx.repos, { livestockId: id, date: Date.UTC(2026, 8, 9), type: 'movement', note: 'Moved' });
+
+    await deleteLivestock(ctx.repos, id);
+    expect(await listEventsFor(ctx.repos, id)).toHaveLength(0);
+  });
+
+  it('leaves other animals and their events in place', async () => {
+    const target = await seedAnimal('ZA-001');
+    const survivor = await seedAnimal('ZA-002');
+    await addEvent(ctx.repos, { livestockId: survivor, date: Date.UTC(2026, 8, 8), type: 'health', note: 'Safe' });
+
+    await deleteLivestock(ctx.repos, target);
+
+    const animals = await listLivestock(ctx.repos);
+    expect(animals.map((a) => a.id)).toEqual([survivor]);
+    expect(await listEventsFor(ctx.repos, survivor)).toHaveLength(1);
+  });
+
+  it('is a no-op for a record that does not exist', async () => {
+    await expect(deleteLivestock(ctx.repos, 'nope')).resolves.toBeUndefined();
   });
 });
