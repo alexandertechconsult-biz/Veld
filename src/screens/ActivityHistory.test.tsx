@@ -17,9 +17,17 @@ function makeActivity(overrides: Partial<Activity>): Activity {
   };
 }
 
+/** The edit/delete plumbing (E3-05) these render tests don't exercise. */
+const stubProps = {
+  status: { kind: 'idle' } as const,
+  onEditActivity: async () => true,
+  onDeleteActivity: async () => true,
+  resetStatus: () => {},
+};
+
 describe('ActivityHistory', () => {
   it('tells the farmer when no activities have been logged yet', () => {
-    render(<ActivityHistory fieldName="North field" activities={[]} />);
+    render(<ActivityHistory fieldName="North field" activities={[]} {...stubProps} />);
     expect(screen.getByText('No activities logged yet.')).toBeInTheDocument();
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
@@ -29,6 +37,7 @@ describe('ActivityHistory', () => {
       <ActivityHistory
         fieldName="North field"
         activities={[makeActivity({ id: 'ac1', type: 'harvest', note: 'Harvested 40 bags' })]}
+        {...stubProps}
       />,
     );
     const list = screen.getByRole('list', { name: 'Activity history for North field' });
@@ -43,7 +52,7 @@ describe('ActivityHistory', () => {
       makeActivity({ id: 'ac-new', date: Date.parse('2026-09-08'), note: 'Newest' }),
       makeActivity({ id: 'ac-old', date: Date.parse('2026-01-01'), note: 'Oldest' }),
     ];
-    render(<ActivityHistory fieldName="North field" activities={activities} />);
+    render(<ActivityHistory fieldName="North field" activities={activities} {...stubProps} />);
     const rows = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(rows[0]).toHaveTextContent('Newest');
     expect(rows[1]).toHaveTextContent('Oldest');

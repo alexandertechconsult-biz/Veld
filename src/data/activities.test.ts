@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  ActivityNotFoundError,
   EmptyActivityNoteError,
   InvalidActivityDateError,
   InvalidActivityTypeError,
   NoFieldError,
   addActivity,
+  deleteActivity,
   listActivitiesFor,
+  updateActivity,
 } from './activities';
 import { addField } from './fields';
 import { addEnterprise } from './enterprises';
@@ -162,5 +165,107 @@ describe('listActivitiesFor', () => {
     const activities = await listActivitiesFor(ctx.repos, fieldId);
     expect(activities).toHaveLength(1);
     expect(activities[0].note).toBe('Planted maize');
+  });
+});
+
+describe('updateActivity', () => {
+  /** Log one activity and return it, for the correction tests. */
+  async function seedActivity() {
+    const fieldId = await seedField();
+    return addActivity(ctx.repos, {
+      fieldId,
+      date: Date.UTC(2026, 8, 8),
+      type: 'planting',
+      note: 'Planted maize',
+    });
+  }
+
+  it('corrects the note and type', async () => {
+    const activity = await seedActivity();
+    const updated = await updateActivity(ctx.repos, activity.id, {
+      note: 'Planted maize, 2 bags seed',
+      type: 'input',
+    });
+    expect(updated.note).toBe('Planted maize, 2 bags seed');
+    expect(updated.type).toBe('input');
+  });
+
+  it('keeps the original date when only the note is corrected (E3-05)', async () => {
+    const activity = await seedActivity();
+    const updated = await updateActivity(ctx.repos, activity.id, { note: 'Reworded' });
+    expect(updated.date).toBe(activity.date);
+  });
+
+  it('changes the date only when the date is the thing being corrected', async () => {
+    const activity = await seedActivity();
+    const corrected = Date.UTC(2026, 8, 1);
+    const updated = await updateActivity(ctx.repos, activity.id, { date: corrected });
+    expect(updated.date).toBe(corrected);
+    expect(updated.note).toBe('Planted maize');
+  });
+
+  it('trims a corrected note and rejects a blank one without writing', async () => {
+    const activity = await seedActivity();
+    await expect(updateActivity(ctx.repos, activity.id, { note: '   ' })).rejects.toBeInstanceOf(
+      EmptyActivityNoteError,
+    );
+    const activities = await listActivitiesFor(ctx.repos, activity.fieldId);
+    expect(activities[0].note).toBe('Planted maize');
+  });
+
+  it('rejects a non-finite date and an unknown type without writing', async () => {
+    const activity = await seedActivity();
+    await expect(
+      updateActivity(ctx.repos, activity.id, { date: Number.NaN }),
+    ).rejects.toBeInstanceOf(InvalidActivityDateError);
+    await expect(
+      updateActivity(ctx.repos, activity.id, { type: 'bogus' as never }),
+    ).rejects.toBeInstanceOf(InvalidActivityTypeError);
+    const activities = await listActivitiesFor(ctx.repos, activity.fieldId);
+    expect(activities[0]).toMatchObject({ type: 'planting', date: activity.date });
+  });
+
+  it('refuses to update an activity that does not exist', async () => {
+    await expect(updateActivity(ctx.repos, 'nope', { note: 'x' })).rejects.toBeInstanceOf(
+      ActivityNotFoundError,
+    );
+  });
+
+  it('persists a correction across a close and reopen', async () => {
+    const activity = await seedActivity();
+    await updateActivity(ctx.repos, activity.id, { note: 'Corrected' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const activities = await listActivitiesFor(ctx.repos, activity.fieldId);
+    expect(activities[0].note).toBe('Corrected');
+  });
+});
+
+describe('deleteActivity', () => {
+  it('removes one activity and leaves the others', async () => {
+    const fieldId = await seedField();
+    const first = await addActivity(ctx.repos, {
+      fieldId,
+      date: Date.UTC(2026, 8, 1),
+      type: 'planting',
+      note: 'First',
+    });
+    await addActivity(ctx.repos, {
+      fieldId,
+      date: Date.UTC(2026, 8, 8),
+      type: 'harvest',
+      note: 'Second',
+    });
+
+    await deleteActivity(ctx.repos, first.id);
+
+    const activities = await listActivitiesFor(ctx.repos, fieldId);
+    expect(activities.map((a) => a.note)).toEqual(['Second']);
+  });
+
+  it('is a no-op for an activity that does not exist', async () => {
+    await expect(deleteActivity(ctx.repos, 'nope')).resolves.toBeUndefined();
   });
 });

@@ -9,8 +9,8 @@ import FieldRow from './FieldRow';
 /**
  * Crops module. Register a field or block (E3-01) — name, crop type, and an
  * optional free-text size — against a crop enterprise, log a dated activity
- * against any of them (E3-02), and see each field's activity history most recent
- * first (E3-03). Edit/delete (E3-05) arrives in a later ticket.
+ * against any of them (E3-02), see each field's activity history most recent
+ * first (E3-03), and correct or remove any field or activity (E3-05).
  */
 export default function CropsScreen() {
   const navigate = useNavigate();
@@ -21,7 +21,11 @@ export default function CropsScreen() {
     status,
     activityStatus,
     registerField,
+    editField,
+    removeField,
     logActivity,
+    editActivity,
+    removeActivity,
     resetActivityStatus,
   } = useFields();
 
@@ -103,10 +107,16 @@ export default function CropsScreen() {
               key={field.id}
               field={field}
               history={activitiesByField[field.id] ?? []}
+              status={status}
               activityStatus={activityStatus}
               isOpen={openActivityFor === field.id}
               onToggle={() => toggleRow(field.id)}
+              onEditField={(changes) => editField(field.id, changes)}
+              onRemoveField={() => removeField(field.id)}
               onLogActivity={(values) => onLogActivity(field.id, values)}
+              onEditActivity={(id, changes) => editActivity(id, changes)}
+              onRemoveActivity={(id) => removeActivity(id)}
+              resetActivityStatus={resetActivityStatus}
             />
           ))}
         </ul>

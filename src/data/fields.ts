@@ -35,12 +35,32 @@ export class NoCropEnterpriseError extends Error {
   }
 }
 
+/** Raised when editing or deleting a field that no longer exists (E3-05). */
+export class FieldNotFoundError extends Error {
+  constructor() {
+    super('That field or block no longer exists.');
+    this.name = 'FieldNotFoundError';
+  }
+}
+
 /** The fields a caller supplies to register a field or block. */
 export interface NewField {
   enterpriseId: ID;
   name: string;
   cropType: string;
   /** Free-text size (e.g. "12 ha") — optional per the spec. */
+  size?: string;
+}
+
+/**
+ * A correction to an existing field (E3-05): every field is optional, so a
+ * caller can change just the name or just the crop type. An omitted field is
+ * left exactly as it was — only what is supplied is validated and written. A
+ * supplied but blank `size` clears the optional size rather than storing "".
+ */
+export interface FieldEdit {
+  name?: string;
+  cropType?: string;
   size?: string;
 }
 
@@ -88,4 +108,53 @@ export async function addField(repos: Repositories, input: NewField): Promise<Fi
     cropType,
     ...(size ? { size } : {}),
   });
+}
+
+/**
+ * Corrects an existing field or block (E3-05). Validates only the fields the
+ * caller supplies — trims and rejects a blank name/crop type without writing —
+ * then leaves every other field untouched. A supplied but blank `size` clears
+ * the optional size (stored as `undefined`, never ""). Requires the field to
+ * exist.
+ */
+export async function updateField(
+  repos: Repositories,
+  id: ID,
+  changes: FieldEdit,
+): Promise<Field> {
+  const existing = await repos.fields.get(id);
+  if (!existing) {
+    throw new FieldNotFoundError();
+  }
+  const patch: FieldEdit = {};
+  if (changes.name !== undefined) {
+    const name = changes.name.trim();
+    if (!name) {
+      throw new EmptyFieldNameError();
+    }
+    patch.name = name;
+  }
+  if (changes.cropType !== undefined) {
+    const cropType = changes.cropType.trim();
+    if (!cropType) {
+      throw new EmptyCropTypeError();
+    }
+    patch.cropType = cropType;
+  }
+  if (changes.size !== undefined) {
+    const size = changes.size.trim();
+    patch.size = size ? size : undefined;
+  }
+  return repos.fields.update(id, patch);
+}
+
+/**
+ * Removes a field or block and every activity logged against it, so deleting a
+ * field never leaves orphaned activities behind (E3-05). Idempotent: deleting a
+ * field that is already gone is a no-op.
+ */
+export async function deleteField(repos: Repositories, id: ID): Promise<void> {
+  const activities = await repos.activities.listByField(id);
+  await Promise.all(activities.map((activity) => repos.activities.delete(activity.id)));
+  await repos.fields.delete(id);
 }

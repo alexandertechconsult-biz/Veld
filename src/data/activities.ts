@@ -53,6 +53,14 @@ export class NoFieldError extends Error {
   }
 }
 
+/** Raised when editing or deleting an activity that no longer exists (E3-05). */
+export class ActivityNotFoundError extends Error {
+  constructor() {
+    super('That activity no longer exists.');
+    this.name = 'ActivityNotFoundError';
+  }
+}
+
 /** The fields a caller supplies to log an activity. */
 export interface NewActivity {
   fieldId: ID;
@@ -60,6 +68,17 @@ export interface NewActivity {
   date: number;
   type: ActivityType;
   note: string;
+}
+
+/**
+ * A correction to an existing activity (E3-05): every field is optional. An
+ * omitted field is left untouched — in particular an activity keeps its
+ * original date unless the date is itself the thing being corrected.
+ */
+export interface ActivityEdit {
+  date?: number;
+  type?: ActivityType;
+  note?: string;
 }
 
 const KNOWN_TYPES: readonly ActivityType[] = ACTIVITY_TYPES.map((entry) => entry.value);
@@ -102,4 +121,48 @@ export async function addActivity(
     type: input.type,
     note,
   });
+}
+
+/**
+ * Corrects an existing activity (E3-05). Validates only the fields the caller
+ * supplies — trims and rejects a blank note without writing, rejects a
+ * non-finite date and an unknown type — and leaves the rest as they were, so
+ * the original date survives any edit that does not touch it. Requires the
+ * activity to exist.
+ */
+export async function updateActivity(
+  repos: Repositories,
+  id: ID,
+  changes: ActivityEdit,
+): Promise<Activity> {
+  const existing = await repos.activities.get(id);
+  if (!existing) {
+    throw new ActivityNotFoundError();
+  }
+  const patch: ActivityEdit = {};
+  if (changes.note !== undefined) {
+    const note = changes.note.trim();
+    if (!note) {
+      throw new EmptyActivityNoteError();
+    }
+    patch.note = note;
+  }
+  if (changes.date !== undefined) {
+    if (!Number.isFinite(changes.date)) {
+      throw new InvalidActivityDateError();
+    }
+    patch.date = changes.date;
+  }
+  if (changes.type !== undefined) {
+    if (!KNOWN_TYPES.includes(changes.type)) {
+      throw new InvalidActivityTypeError();
+    }
+    patch.type = changes.type;
+  }
+  return repos.activities.update(id, patch);
+}
+
+/** Removes one activity. Idempotent: deleting a missing one is a no-op (E3-05). */
+export async function deleteActivity(repos: Repositories, id: ID): Promise<void> {
+  await repos.activities.delete(id);
 }

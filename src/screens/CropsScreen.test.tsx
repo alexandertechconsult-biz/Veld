@@ -240,4 +240,123 @@ describe('CropsScreen', () => {
     expect(history).toHaveTextContent('Input');
     expect(history).toHaveTextContent('Sprayed herbicide');
   });
+
+  it('corrects a field record (E3-05)', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit field' }));
+
+    fireEvent.change(screen.getByTestId('field-edit-name-input'), {
+      target: { value: 'North paddock' },
+    });
+    fireEvent.change(screen.getByTestId('field-edit-crop-input'), { target: { value: 'Wheat' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    await screen.findByText('Changes saved.');
+    const list = screen.getByRole('list', { name: 'Fields' });
+    expect(list).toHaveTextContent('North paddock');
+    expect(list).toHaveTextContent('Wheat');
+    const stored = await db.fields.get('field1');
+    expect(stored).toMatchObject({ name: 'North paddock', cropType: 'Wheat' });
+  });
+
+  it('confirms and names the field before deleting it (E3-05)', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete field' }));
+
+    // The confirmation names exactly what is being removed.
+    expect(screen.getByText("Delete North field? This can't be undone.")).toBeInTheDocument();
+    // Nothing is gone until the farmer confirms.
+    expect(await db.fields.toArray()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.fields.toArray()).toHaveLength(0));
+    expect(screen.queryByRole('list', { name: 'Fields' })).not.toBeInTheDocument();
+  });
+
+  it('deleting a field removes its activities too (E3-05)', async () => {
+    const fieldId = await seedField();
+    await db.activities.add({
+      id: 'ac1',
+      createdAt: 1,
+      updatedAt: 1,
+      fieldId,
+      date: Date.parse('2026-09-08'),
+      type: 'planting',
+      note: 'Planted maize',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete field' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.fields.toArray()).toHaveLength(0));
+    expect(await db.activities.toArray()).toHaveLength(0);
+  });
+
+  it('corrects an activity note and keeps its original date (E3-05)', async () => {
+    const fieldId = await seedField();
+    const date = Date.parse('2026-09-08');
+    await db.activities.add({
+      id: 'ac1',
+      createdAt: 1,
+      updatedAt: 1,
+      fieldId,
+      date,
+      type: 'planting',
+      note: 'Planted maize',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit activity' }));
+
+    const editForm = screen.getByRole('form', { name: 'Edit Planting activity for North field' });
+    fireEvent.change(within(editForm).getByTestId('activity-note-input'), {
+      target: { value: 'Planted maize, 2 bags seed' },
+    });
+    fireEvent.click(within(editForm).getByRole('button', { name: 'Save activity' }));
+
+    await waitFor(async () => {
+      const stored = await db.activities.get('ac1');
+      expect(stored?.note).toBe('Planted maize, 2 bags seed');
+    });
+    // The date is untouched because only the note was corrected.
+    expect((await db.activities.get('ac1'))?.date).toBe(date);
+  });
+
+  it('confirms and names the activity before deleting it (E3-05)', async () => {
+    const fieldId = await seedField();
+    await db.activities.add({
+      id: 'ac1',
+      createdAt: 1,
+      updatedAt: 1,
+      fieldId,
+      date: Date.parse('2026-09-08'),
+      type: 'planting',
+      note: 'Planted maize',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete activity' }));
+
+    // The confirmation names the activity (type and date) being removed.
+    expect(screen.getByText(/Delete this Planting activity from/)).toBeInTheDocument();
+    expect(await db.activities.toArray()).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(async () => expect(await db.activities.toArray()).toHaveLength(0));
+    // Wait for the reload-driven re-render before asserting the empty state, so
+    // the assertion never races the delete's re-render.
+    expect(await screen.findByText('No activities logged yet.')).toBeInTheDocument();
+  });
 });

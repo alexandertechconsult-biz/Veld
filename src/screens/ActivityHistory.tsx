@@ -1,36 +1,35 @@
-import { ACTIVITY_TYPES } from '../data/activities';
-import type { Activity, ActivityType } from '../data';
-
-/** Label to show for each activity type, from the single ACTIVITY_TYPES source. */
-const TYPE_LABELS: Readonly<Record<ActivityType, string>> = Object.fromEntries(
-  ACTIVITY_TYPES.map((entry) => [entry.value, entry.label]),
-) as Record<ActivityType, string>;
-
-/** Human date for an activity, e.g. "8 Sep 2026". Empty on a bad value. */
-function formatActivityDate(ms: number): string {
-  if (!Number.isFinite(ms)) return '';
-  return new Date(ms).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+import type { Activity, ID } from '../data';
+import type { ActivityFormValues } from './ActivityForm';
+import ActivityRow from './ActivityRow';
+import type { ActivityStatus } from './useFields';
 
 interface ActivityHistoryProps {
   /** Name of the field or block, so the list can be labelled for context. */
   fieldName: string;
   /** Activities for this field, most recent first (ordered by the data layer). */
   activities: Activity[];
+  status: ActivityStatus;
+  onEditActivity: (id: ID, changes: ActivityFormValues) => Promise<boolean>;
+  onDeleteActivity: (id: ID) => Promise<boolean>;
+  /** Clears any stale status when an inline edit form opens. */
+  resetStatus: () => void;
 }
 
 /**
  * Read-only history of activities for one field or block (E3-03): a
  * chronological list, most recent first. The crop analogue of EventHistory
  * (E2-03). The ordering is owned by the data layer (`listActivitiesFor` →
- * most recent first); this component only renders it. Edit and delete arrive
- * in E3-05.
+ * most recent first); this component renders it and hands each row its own
+ * inline edit and delete controls (E3-05).
  */
-export default function ActivityHistory({ fieldName, activities }: ActivityHistoryProps) {
+export default function ActivityHistory({
+  fieldName,
+  activities,
+  status,
+  onEditActivity,
+  onDeleteActivity,
+  resetStatus,
+}: ActivityHistoryProps) {
   if (activities.length === 0) {
     return <p className="event-history__empty settings-status">No activities logged yet.</p>;
   }
@@ -38,18 +37,15 @@ export default function ActivityHistory({ fieldName, activities }: ActivityHisto
   return (
     <ol className="event-history" aria-label={`Activity history for ${fieldName}`}>
       {activities.map((activity) => (
-        <li key={activity.id} className="event-history__row">
-          <div className="event-history__head">
-            <span className="event-history__type">{TYPE_LABELS[activity.type]}</span>
-            <time
-              className="event-history__date"
-              dateTime={new Date(activity.date).toISOString()}
-            >
-              {formatActivityDate(activity.date)}
-            </time>
-          </div>
-          <p className="event-history__note">{activity.note}</p>
-        </li>
+        <ActivityRow
+          key={activity.id}
+          activity={activity}
+          fieldName={fieldName}
+          status={status}
+          onEdit={onEditActivity}
+          onDelete={onDeleteActivity}
+          resetStatus={resetStatus}
+        />
       ))}
     </ol>
   );
