@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import CropsScreen from './CropsScreen';
 import { NavigationProvider } from '../app/navigationContext';
 import { db } from '../data';
@@ -182,5 +182,62 @@ describe('CropsScreen', () => {
       expect(screen.queryByTestId('activity-note-input')).not.toBeInTheDocument(),
     );
     expect(await db.activities.toArray()).toHaveLength(0);
+  });
+
+  it('shows a field activity history, most recent first (E3-03)', async () => {
+    const fieldId = await seedField();
+    // Seed two activities out of order; the data layer sorts most recent first.
+    await db.activities.add({
+      id: 'ac-old',
+      createdAt: 1,
+      updatedAt: 1,
+      fieldId,
+      date: Date.parse('2026-01-01'),
+      type: 'planting',
+      note: 'Planted maize',
+    });
+    await db.activities.add({
+      id: 'ac-new',
+      createdAt: 2,
+      updatedAt: 2,
+      fieldId,
+      date: Date.parse('2026-08-20'),
+      type: 'harvest',
+      note: 'Harvested 40 bags',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    const history = await screen.findByRole('list', {
+      name: 'Activity history for North field',
+    });
+    const rows = within(history).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent('Harvested 40 bags');
+    expect(rows[1]).toHaveTextContent('Planted maize');
+    expect(await screen.findByText(/2 activities/)).toBeInTheDocument();
+  });
+
+  it('logs an activity and it appears in the history (E3-03)', async () => {
+    await seedField();
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    // Empty state until the first activity is logged.
+    expect(screen.getByText('No activities logged yet.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('activity-note-input'), {
+      target: { value: 'Sprayed herbicide' },
+    });
+    fireEvent.change(screen.getByTestId('activity-type-select'), { target: { value: 'input' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Log activity' }));
+
+    await screen.findByText('Activity logged.');
+    // Reopen the panel; the new activity now shows in the history.
+    fireEvent.click(await screen.findByRole('button', { name: 'Log activity' }));
+    const history = await screen.findByRole('list', {
+      name: 'Activity history for North field',
+    });
+    expect(history).toHaveTextContent('Input');
+    expect(history).toHaveTextContent('Sprayed herbicide');
   });
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { repositories } from '../data';
-import type { Enterprise, Field } from '../data';
+import type { Activity, Enterprise, Field } from '../data';
 import {
   EmptyCropTypeError,
   EmptyFieldNameError,
@@ -35,15 +35,15 @@ export type ActivityStatus =
   | { kind: 'saved' }
   | { kind: 'error'; message: string };
 
-/** How many activities each field has logged, keyed by its id. */
-export type ActivityCounts = Readonly<Record<string, number>>;
+/** Each field's activities, most recent first, keyed by its id (E3-03). */
+export type ActivitiesByField = Readonly<Record<string, Activity[]>>;
 
-/** Count each field's activities, keyed by id, for the row's meta badge. */
-async function loadActivityCounts(list: Field[]): Promise<ActivityCounts> {
+/** Load every field's activity history (most recent first), keyed by id. */
+async function loadActivities(list: Field[]): Promise<ActivitiesByField> {
   const entries = await Promise.all(
     list.map(async (field) => {
       const activities = await listActivitiesFor(repositories, field.id);
-      return [field.id, activities.length] as const;
+      return [field.id, activities] as const;
     }),
   );
   return Object.fromEntries(entries);
@@ -71,15 +71,15 @@ function messageFor(error: unknown, fallback: string): string {
 export function useFields() {
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
   const [fields, setFields] = useState<Field[]>([]);
-  const [activityCounts, setActivityCounts] = useState<ActivityCounts>({});
+  const [activitiesByField, setActivitiesByField] = useState<ActivitiesByField>({});
   const [status, setStatus] = useState<FieldsStatus>({ kind: 'loading' });
   const [activityStatus, setActivityStatus] = useState<ActivityStatus>({ kind: 'idle' });
 
-  /** Re-read the fields and their activity counts from the database into state. */
+  /** Re-read the fields and their activity history from the database into state. */
   const reload = useCallback(async () => {
     const list = await listFields(repositories);
     setFields(list);
-    setActivityCounts(await loadActivityCounts(list));
+    setActivitiesByField(await loadActivities(list));
   }, []);
 
   useEffect(() => {
@@ -90,11 +90,11 @@ export function useFields() {
           listCropEnterprises(repositories),
           listFields(repositories),
         ]);
-        const counts = await loadActivityCounts(list);
+        const activities = await loadActivities(list);
         if (!active) return;
         setEnterprises(ents);
         setFields(list);
-        setActivityCounts(counts);
+        setActivitiesByField(activities);
         setStatus({ kind: 'ready' });
       } catch {
         if (!active) return;
@@ -157,7 +157,7 @@ export function useFields() {
   return {
     enterprises,
     fields,
-    activityCounts,
+    activitiesByField,
     status,
     activityStatus,
     registerField,

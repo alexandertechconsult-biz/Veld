@@ -1,7 +1,8 @@
 import { Sprout } from 'lucide-react';
-import type { Field } from '../data';
+import type { Activity, Field } from '../data';
 import type { ActivityFormValues } from './ActivityForm';
 import ActivityForm from './ActivityForm';
+import ActivityHistory from './ActivityHistory';
 import type { ActivityStatus } from './useFields';
 
 const ICON_SIZE = 24;
@@ -15,8 +16,8 @@ function activityCountLabel(count: number): string {
 
 interface FieldRowProps {
   field: Field;
-  /** How many activities this field has logged. */
-  activityCount: number;
+  /** This field's activities, most recent first. */
+  history: Activity[];
   activityStatus: ActivityStatus;
   isOpen: boolean;
   onToggle: () => void;
@@ -25,18 +26,18 @@ interface FieldRowProps {
 
 /**
  * One field or block in the crops list. The always-visible line shows the field
- * and its activity count; expanding it reveals a log-activity form (E3-02).
- * Activity history (E3-03) and edit/delete (E3-05) arrive in later tickets.
+ * and its activity count; expanding it reveals the activity history (E3-03) above
+ * a log-activity form (E3-02). Edit/delete (E3-05) arrives in a later ticket.
  */
 export default function FieldRow({
   field,
-  activityCount,
+  history,
   activityStatus,
   isOpen,
   onToggle,
   onLogActivity,
 }: FieldRowProps) {
-  const activities = activityCountLabel(activityCount);
+  const activities = activityCountLabel(history.length);
 
   return (
     <li className="record-row">
@@ -62,6 +63,7 @@ export default function FieldRow({
 
       {isOpen ? (
         <div className="record-row__panel">
+          <ActivityHistory fieldName={field.name} activities={history} />
           <ActivityForm
             fieldName={field.name}
             status={activityStatus}
