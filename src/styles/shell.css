@@ -335,6 +335,188 @@
   opacity: 0.5;
 }
 
+/* The type picker reuses the Input style (design-system §7); it stays a native
+   select so its dropdown arrow signals it's a picker, not a text field. */
+select.field__input {
+  cursor: pointer;
+}
+
+/* Enterprises list (E1-02) — List row spec, design-system §7: 64px min height,
+   --surface fill, 1px bottom hairline, 16px padding, 24px leading icon. */
+.enterprise-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.enterprise-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-bottom: var(--border-width) solid var(--border);
+  color: var(--text);
+}
+
+.enterprise-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.enterprise-row__name {
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+}
+
+.enterprise-row__type {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  color: var(--text-muted);
+}
+
+/* Module screen — a titled section with a record list and add form (E2-01) --
+   Reuses the .farm-form / .field / .list-row conventions; colours are tokens. */
+.module {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.module__title {
+  font-size: var(--size-heading);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-heading);
+}
+
+.module__hint {
+  font-size: var(--size-label);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.record-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.record-row {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-bottom: var(--border-width) solid var(--border);
+  color: var(--text);
+}
+
+/* The always-visible row: icon, name/meta, and the log-event toggle. */
+.record-row__main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 64px;
+}
+
+.record-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  /* Push the log-event action to the trailing edge. */
+  flex: 1;
+}
+
+.record-row__name {
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+}
+
+.record-row__meta {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  color: var(--text-muted);
+}
+
+.record-row__action {
+  flex-shrink: 0;
+}
+
+/* Inline log-event form (E2-02), shown under the row it belongs to. */
+.event-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.event-form__note {
+  min-height: var(--target-primary);
+  padding: var(--space-3) var(--space-4);
+  resize: vertical;
+  line-height: var(--leading-body);
+}
+
+.event-form__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* Expanded panel under a row: event history above the log-event form (E2-03). */
+.record-row__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+/* Chronological event history for one animal or group, most recent first. */
+.event-history {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.event-history__row {
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-sunk);
+  border-radius: var(--radius);
+}
+
+.event-history__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.event-history__type {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.event-history__date {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  color: var(--text-muted);
+}
+
+.event-history__note {
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+  color: var(--text);
+  margin-top: var(--space-1);
+}
+
+.event-history__empty {
+  margin: 0;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;

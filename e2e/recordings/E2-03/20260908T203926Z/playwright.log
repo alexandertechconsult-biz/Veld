@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e2-03-event-history.spec.ts:10:1 › shows an animal event history, most recent first, that survives a reload @E2-03 (1.5s)
+  ✓  2 [desktop-chromium] › e2e/specs/e2-03-event-history.spec.ts:10:1 › shows an animal event history, most recent first, that survives a reload @E2-03 (1.0s)
+
+  2 passed (4.4s)

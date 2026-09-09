@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e1-02-enterprises.spec.ts:10:1 › adds livestock and crop enterprises that persist across a reload @E1-02 (1.3s)
+  ✓  2 [desktop-chromium] › e2e/specs/e1-02-enterprises.spec.ts:10:1 › adds livestock and crop enterprises that persist across a reload @E1-02 (990ms)
+
+  2 passed (5.1s)
