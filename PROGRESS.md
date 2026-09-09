@@ -31,7 +31,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E2-03  See a history of events per animal or group, most recent first  | tests: 113/113 unit, 2/2 e2e  | e2e: e2e/recordings/E2-03/20260908T203926Z  | commit: 02cd8c3
 - DONE  E2-06  Correct or remove a livestock record or event  | tests: 137/137 unit, 2/2 e2e  | e2e: e2e/recordings/E2-06/20260909T081244Z  | commit: ade7f64
 - DONE  E3-01  Register a field or block  | tests: 155/155 unit, 2/2 e2e  | e2e: e2e/recordings/E3-01/20260909T081834Z  | commit: 37fcd04
-- DONE  E3-02  Log an activity against a field  | tests: 168/168 unit, 2/2 e2e  | e2e: e2e/recordings/E3-02/20260909T083603Z  | commit: <pending>
+- DONE  E3-02  Log an activity against a field  | tests: 168/168 unit, 2/2 e2e  | e2e: e2e/recordings/E3-02/20260909T083603Z  | commit: b6de327
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
