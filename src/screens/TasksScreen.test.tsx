@@ -181,4 +181,81 @@ describe('TasksScreen', () => {
     expect(openList).not.toHaveTextContent('Already finished');
     expect(doneList).toHaveTextContent('Already finished');
   });
+
+  it('edits a task title inline and persists it (E4-03)', async () => {
+    await seedFarm();
+    await db.tasks.add({
+      id: 't-open',
+      createdAt: 1,
+      updatedAt: 1,
+      farmId: 'f1',
+      title: 'Fix fence',
+      status: 'open',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit task' }));
+    fireEvent.change(screen.getByTestId('task-edit-title-input'), {
+      target: { value: 'Fix the north fence' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    await screen.findByText('Task updated.');
+    await waitFor(async () => {
+      const stored = await db.tasks.get('t-open');
+      expect(stored?.title).toBe('Fix the north fence');
+    });
+    // The inline form closed, so the row is back to its summary line.
+    expect(screen.queryByTestId('task-edit-title-input')).not.toBeInTheDocument();
+    expect(screen.getByRole('list', { name: 'Open tasks' })).toHaveTextContent(
+      'Fix the north fence',
+    );
+  });
+
+  it('deletes a task only after a naming confirmation (E4-03)', async () => {
+    await seedFarm();
+    await db.tasks.add({
+      id: 't-open',
+      createdAt: 1,
+      updatedAt: 1,
+      farmId: 'f1',
+      title: 'Fix fence',
+      status: 'open',
+    });
+    renderScreen();
+
+    // First tap reveals the confirmation that names the task; nothing removed yet.
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete task' }));
+    expect(screen.getByText('Delete "Fix fence"? This can\'t be undone.')).toBeInTheDocument();
+    expect(await db.tasks.count()).toBe(1);
+
+    // Second, explicit tap deletes it.
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await screen.findByText('Task deleted.');
+    await waitFor(async () => expect(await db.tasks.count()).toBe(0));
+  });
+
+  it('reopens a done task, moving it back to the Open group (E4-03)', async () => {
+    await seedFarm();
+    await db.tasks.add({
+      id: 't-done',
+      createdAt: 1,
+      updatedAt: 1,
+      farmId: 'f1',
+      title: 'Order feed',
+      status: 'done',
+    });
+    renderScreen();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reopen' }));
+    await screen.findByText('Task reopened.');
+    await waitFor(async () => {
+      const stored = await db.tasks.get('t-done');
+      expect(stored?.status).toBe('open');
+    });
+
+    const openList = screen.getByRole('list', { name: 'Open tasks' });
+    expect(openList).toHaveTextContent('Order feed');
+    expect(screen.queryByRole('list', { name: 'Done tasks' })).not.toBeInTheDocument();
+  });
 });

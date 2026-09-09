@@ -67,6 +67,22 @@ export interface NewTask {
   dueDate?: number;
 }
 
+/**
+ * A full snapshot of a task's editable fields (E4-03). Unlike a partial patch,
+ * the caller supplies every editable field on each save — the edit form always
+ * has them all — so the link, assignee and due date can be changed or cleared:
+ * an omitted `fieldId`/`livestockId` clears the link, a blank assignee clears
+ * the assignee, and an omitted `dueDate` clears the due date. Status is not
+ * editable here — reopening is a separate call.
+ */
+export interface TaskEdit {
+  title: string;
+  fieldId?: ID;
+  livestockId?: ID;
+  assignee?: string;
+  dueDate?: number;
+}
+
 /** What a task can be linked to: a field or an animal/group. */
 export type TaskLinkKind = 'field' | 'livestock';
 
@@ -154,4 +170,67 @@ export async function markTaskDone(repos: Repositories, id: ID): Promise<Task> {
     throw new TaskNotFoundError();
   }
   return repos.tasks.update(id, { status: 'done' });
+}
+
+/**
+ * Reopens a done task (E4-03): flips its status back to `open`, moving it to the
+ * Open group in the UI. Requires the task to exist. Idempotent — reopening an
+ * already-open task is a harmless no-op. Leaves the title, link, assignee and
+ * due date untouched.
+ */
+export async function reopenTask(repos: Repositories, id: ID): Promise<Task> {
+  const existing = await repos.tasks.get(id);
+  if (!existing) {
+    throw new TaskNotFoundError();
+  }
+  return repos.tasks.update(id, { status: 'open' });
+}
+
+/**
+ * Corrects an existing task (E4-03): title, link, assignee and due date. The
+ * title is trimmed and a blank one is rejected without writing. The link,
+ * assignee and due date are applied as given — a supplied link is validated to
+ * still exist, a blank assignee is cleared rather than stored as "", and a
+ * supplied due date must be a real point in time — so an omitted field/animal,
+ * assignee or due date clears it. The task's done/open status is left untouched.
+ * Requires the task to exist.
+ */
+export async function updateTask(
+  repos: Repositories,
+  id: ID,
+  changes: TaskEdit,
+): Promise<Task> {
+  const existing = await repos.tasks.get(id);
+  if (!existing) {
+    throw new TaskNotFoundError();
+  }
+  const title = changes.title.trim();
+  if (!title) {
+    throw new EmptyTaskTitleError();
+  }
+  if (changes.dueDate !== undefined && !Number.isFinite(changes.dueDate)) {
+    throw new InvalidDueDateError();
+  }
+  if (changes.fieldId !== undefined && !(await repos.fields.get(changes.fieldId))) {
+    throw new TaskLinkNotFoundError();
+  }
+  if (changes.livestockId !== undefined && !(await repos.livestock.get(changes.livestockId))) {
+    throw new TaskLinkNotFoundError();
+  }
+  const assignee = changes.assignee?.trim();
+  return repos.tasks.update(id, {
+    title,
+    fieldId: changes.fieldId,
+    livestockId: changes.livestockId,
+    assignee: assignee ? assignee : undefined,
+    dueDate: changes.dueDate,
+  });
+}
+
+/**
+ * Removes a task (E4-03). Idempotent: deleting a task that is already gone is a
+ * no-op. A task has no children, so nothing cascades.
+ */
+export async function deleteTask(repos: Repositories, id: ID): Promise<void> {
+  await repos.tasks.delete(id);
 }

@@ -4,28 +4,18 @@ import EmptyState from '../components/EmptyState';
 import { useNavigate } from '../app/navigationContext';
 import TaskRow from './TaskRow';
 import { useTasks } from './useTasks';
-import type { TaskLinkOption } from '../data/tasks';
-
-/** The picker's "no link" sentinel and the encoding of a real link option. */
-const NO_LINK = '';
-const encodeLink = (option: TaskLinkOption): string => `${option.kind}:${option.id}`;
-
-/** Split a picker value back into the field/animal ids the domain expects. */
-function decodeLink(value: string): { fieldId?: string; livestockId?: string } {
-  if (value === NO_LINK) return {};
-  const [kind, id] = value.split(':');
-  return kind === 'field' ? { fieldId: id } : { livestockId: id };
-}
+import { NO_LINK, decodeLink, encodeLink } from './taskLinks';
 
 /**
  * Tasks module. Create a task (E4-01) — a required title with an optional link
  * to a field or animal/group, a free-text assignee and a due date — list the
- * farm's tasks grouped by Open and Done, and mark a task done in a single tap
- * (E4-02). Edit/delete (E4-03) is a separate ticket.
+ * farm's tasks grouped by Open and Done, mark a task done in a single tap
+ * (E4-02), and edit, delete or reopen a task (E4-03).
  */
 export default function TasksScreen() {
   const navigate = useNavigate();
-  const { tasks, linkOptions, status, createTask, markDone } = useTasks();
+  const { tasks, linkOptions, status, createTask, markDone, reopen, editTask, removeTask } =
+    useTasks();
 
   const [title, setTitle] = useState('');
   const [link, setLink] = useState(NO_LINK);
@@ -97,7 +87,10 @@ export default function TasksScreen() {
                   key={task.id}
                   task={task}
                   options={linkOptions}
+                  status={status}
                   onMarkDone={markDone}
+                  onEdit={editTask}
+                  onDelete={removeTask}
                   busy={saving}
                 />
               ))}
@@ -109,7 +102,16 @@ export default function TasksScreen() {
               <h3 className="task-group__title">Done</h3>
               <ul className="record-list" aria-label="Done tasks">
                 {doneTasks.map((task) => (
-                  <TaskRow key={task.id} task={task} options={linkOptions} />
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    options={linkOptions}
+                    status={status}
+                    onReopen={reopen}
+                    onEdit={editTask}
+                    onDelete={removeTask}
+                    busy={saving}
+                  />
                 ))}
               </ul>
             </>

@@ -9,10 +9,14 @@ import {
   TaskLinkNotFoundError,
   TaskNotFoundError,
   addTask,
+  deleteTask,
   listTaskLinkOptions,
   listTasks,
   markTaskDone,
+  reopenTask,
+  updateTask,
   type NewTask,
+  type TaskEdit,
   type TaskLinkOption,
 } from '../data/tasks';
 
@@ -93,22 +97,90 @@ export function useTasks() {
     }
   }, []);
 
-  /** Marks a task done in a single call and reloads so it moves to the Done group. */
-  const markDone = useCallback(async (id: ID): Promise<boolean> => {
-    setStatus({ kind: 'saving' });
-    try {
-      await markTaskDone(repositories, id);
-      setTasks(await listTasks(repositories));
-      setStatus({ kind: 'saved', message: 'Task marked done.' });
-      return true;
-    } catch (error) {
-      setStatus({
-        kind: 'error',
-        message: messageFor(error, 'Could not update the task. Please try again.'),
-      });
-      return false;
-    }
+  /** Reloads the task list after a mutation. */
+  const reload = useCallback(async () => {
+    setTasks(await listTasks(repositories));
   }, []);
 
-  return { tasks, linkOptions, status, createTask, markDone };
+  /** Marks a task done in a single call and reloads so it moves to the Done group. */
+  const markDone = useCallback(
+    async (id: ID): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await markTaskDone(repositories, id);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Task marked done.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not update the task. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  /** Reopens a done task and reloads so it moves back to the Open group (E4-03). */
+  const reopen = useCallback(
+    async (id: ID): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await reopenTask(repositories, id);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Task reopened.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not update the task. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  /** Corrects a task's title, link, assignee and due date (E4-03). */
+  const editTask = useCallback(
+    async (id: ID, changes: TaskEdit): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await updateTask(repositories, id, changes);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Task updated.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not update the task. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  /** Deletes a task and reloads so it drops out of the list (E4-03). */
+  const removeTask = useCallback(
+    async (id: ID): Promise<boolean> => {
+      setStatus({ kind: 'saving' });
+      try {
+        await deleteTask(repositories, id);
+        await reload();
+        setStatus({ kind: 'saved', message: 'Task deleted.' });
+        return true;
+      } catch (error) {
+        setStatus({
+          kind: 'error',
+          message: messageFor(error, 'Could not delete the task. Please try again.'),
+        });
+        return false;
+      }
+    },
+    [reload],
+  );
+
+  return { tasks, linkOptions, status, createTask, markDone, reopen, editTask, removeTask };
 }

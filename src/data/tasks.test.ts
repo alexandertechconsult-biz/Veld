@@ -6,9 +6,12 @@ import {
   TaskLinkNotFoundError,
   TaskNotFoundError,
   addTask,
+  deleteTask,
   listTaskLinkOptions,
   listTasks,
   markTaskDone,
+  reopenTask,
+  updateTask,
 } from './tasks';
 import { addEnterprise } from './enterprises';
 import { addField } from './fields';
@@ -240,5 +243,217 @@ describe('markTaskDone', () => {
       TaskNotFoundError,
     );
     expect(await listTasks(ctx.repos)).toEqual([]);
+  });
+});
+
+describe('reopenTask', () => {
+  it('flips a done task back to open', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Order feed' });
+    await markTaskDone(ctx.repos, task.id);
+
+    const reopened = await reopenTask(ctx.repos, task.id);
+    expect(reopened.status).toBe('open');
+    expect(reopened.id).toBe(task.id);
+  });
+
+  it('persists the reopened status', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Order feed' });
+    await markTaskDone(ctx.repos, task.id);
+    await reopenTask(ctx.repos, task.id);
+
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.status).toBe('open');
+  });
+
+  it('is idempotent on an already-open task', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Spray weeds' });
+
+    const again = await reopenTask(ctx.repos, task.id);
+    expect(again.status).toBe('open');
+  });
+
+  it('rejects a task that does not exist, without writing', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    await expect(reopenTask(ctx.repos, 'no-such-task')).rejects.toBeInstanceOf(TaskNotFoundError);
+    expect(await listTasks(ctx.repos)).toEqual([]);
+  });
+});
+
+describe('updateTask', () => {
+  it('corrects the title, trimmed', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Fix fence' });
+
+    const edited = await updateTask(ctx.repos, task.id, { title: '  Fix the north fence  ' });
+    expect(edited.title).toBe('Fix the north fence');
+    expect(edited.id).toBe(task.id);
+  });
+
+  it('rejects a blank title, leaving the task unchanged', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Fix fence' });
+
+    await expect(updateTask(ctx.repos, task.id, { title: '   ' })).rejects.toBeInstanceOf(
+      EmptyTaskTitleError,
+    );
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.title).toBe('Fix fence');
+  });
+
+  it('changes the link from one field to an animal', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const fieldId = await seedField();
+    const livestockId = await seedAnimal();
+    const task = await addTask(ctx.repos, { title: 'Check', fieldId });
+
+    const edited = await updateTask(ctx.repos, task.id, { title: 'Check', livestockId });
+    expect(edited.livestockId).toBe(livestockId);
+    expect(edited.fieldId).toBeUndefined();
+  });
+
+  it('clears the link when neither field nor animal is supplied', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const fieldId = await seedField();
+    const task = await addTask(ctx.repos, { title: 'Check', fieldId });
+
+    const edited = await updateTask(ctx.repos, task.id, { title: 'Check' });
+    expect(edited.fieldId).toBeUndefined();
+    expect(edited.livestockId).toBeUndefined();
+  });
+
+  it('rejects a link to a field that no longer exists, without writing', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Check' });
+
+    await expect(
+      updateTask(ctx.repos, task.id, { title: 'Check', fieldId: 'ghost' }),
+    ).rejects.toBeInstanceOf(TaskLinkNotFoundError);
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.fieldId).toBeUndefined();
+  });
+
+  it('changes the assignee and clears it when blank', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Move cattle', assignee: 'Themba' });
+
+    const renamed = await updateTask(ctx.repos, task.id, { title: 'Move cattle', assignee: 'Sipho' });
+    expect(renamed.assignee).toBe('Sipho');
+
+    const cleared = await updateTask(ctx.repos, task.id, { title: 'Move cattle', assignee: '  ' });
+    expect(cleared.assignee).toBeUndefined();
+  });
+
+  it('changes the due date and clears it when omitted', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, {
+      title: 'Order seed',
+      dueDate: Date.parse('2026-10-01'),
+    });
+
+    const moved = await updateTask(ctx.repos, task.id, {
+      title: 'Order seed',
+      dueDate: Date.parse('2026-11-01'),
+    });
+    expect(moved.dueDate).toBe(Date.parse('2026-11-01'));
+
+    const cleared = await updateTask(ctx.repos, task.id, { title: 'Order seed' });
+    expect(cleared.dueDate).toBeUndefined();
+  });
+
+  it('rejects an unreal due date, leaving the task unchanged', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, {
+      title: 'Order seed',
+      dueDate: Date.parse('2026-10-01'),
+    });
+
+    await expect(
+      updateTask(ctx.repos, task.id, { title: 'Order seed', dueDate: NaN }),
+    ).rejects.toBeInstanceOf(InvalidDueDateError);
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.dueDate).toBe(Date.parse('2026-10-01'));
+  });
+
+  it('leaves the done/open status untouched when editing', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Order feed' });
+    await markTaskDone(ctx.repos, task.id);
+
+    const edited = await updateTask(ctx.repos, task.id, { title: 'Order more feed' });
+    expect(edited.status).toBe('done');
+  });
+
+  it('rejects a task that does not exist, without writing', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    await expect(
+      updateTask(ctx.repos, 'no-such-task', { title: 'Anything' }),
+    ).rejects.toBeInstanceOf(TaskNotFoundError);
+    expect(await listTasks(ctx.repos)).toEqual([]);
+  });
+
+  it('survives a close and reopen of the database', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Fix fence' });
+    await updateTask(ctx.repos, task.id, { title: 'Fix the west fence', assignee: 'Themba' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.title).toBe('Fix the west fence');
+    expect(stored?.assignee).toBe('Themba');
+  });
+
+  it('persists a cleared link, assignee and due date across a reopen', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const fieldId = await seedField();
+    const task = await addTask(ctx.repos, {
+      title: 'Spray weeds',
+      fieldId,
+      assignee: 'Themba',
+      dueDate: Date.parse('2026-10-01'),
+    });
+    // A title-only edit clears the link, assignee and due date.
+    await updateTask(ctx.repos, task.id, { title: 'Spray weeds' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.fieldId).toBeUndefined();
+    expect(stored?.assignee).toBeUndefined();
+    expect(stored?.dueDate).toBeUndefined();
+  });
+});
+
+describe('deleteTask', () => {
+  it('removes the task', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Fix fence' });
+
+    await deleteTask(ctx.repos, task.id);
+    expect(await ctx.repos.tasks.get(task.id)).toBeUndefined();
+    expect(await listTasks(ctx.repos)).toEqual([]);
+  });
+
+  it('is idempotent when the task is already gone', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Fix fence' });
+    await deleteTask(ctx.repos, task.id);
+
+    await expect(deleteTask(ctx.repos, task.id)).resolves.toBeUndefined();
+  });
+
+  it('removes only the named task, leaving the others', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const keep = await addTask(ctx.repos, { title: 'Keep me' });
+    const drop = await addTask(ctx.repos, { title: 'Drop me' });
+
+    await deleteTask(ctx.repos, drop.id);
+    const list = await listTasks(ctx.repos);
+    expect(list.map((t) => t.id)).toEqual([keep.id]);
   });
 });
