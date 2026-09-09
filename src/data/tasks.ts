@@ -46,6 +46,14 @@ export class TaskLinkNotFoundError extends Error {
   }
 }
 
+/** Raised when marking a task that no longer exists. */
+export class TaskNotFoundError extends Error {
+  constructor() {
+    super('That task no longer exists.');
+    this.name = 'TaskNotFoundError';
+  }
+}
+
 /** The fields a caller supplies to create a task. Only the title is required. */
 export interface NewTask {
   title: string;
@@ -132,4 +140,18 @@ export async function addTask(repos: Repositories, input: NewTask): Promise<Task
     ...(assignee ? { assignee } : {}),
     ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
   });
+}
+
+/**
+ * Marks a task done (E4-02): a single call flips its status to `done`, moving it
+ * to the Done group in the UI. Requires the task to exist. Idempotent — marking
+ * an already-done task done again is a harmless no-op that leaves it done.
+ * Reopening a done task, and editing or deleting one, are E4-03.
+ */
+export async function markTaskDone(repos: Repositories, id: ID): Promise<Task> {
+  const existing = await repos.tasks.get(id);
+  if (!existing) {
+    throw new TaskNotFoundError();
+  }
+  return repos.tasks.update(id, { status: 'done' });
 }

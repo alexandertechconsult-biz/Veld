@@ -4,9 +4,11 @@ import {
   InvalidDueDateError,
   NoFarmForTaskError,
   TaskLinkNotFoundError,
+  TaskNotFoundError,
   addTask,
   listTaskLinkOptions,
   listTasks,
+  markTaskDone,
 } from './tasks';
 import { addEnterprise } from './enterprises';
 import { addField } from './fields';
@@ -183,5 +185,60 @@ describe('listTaskLinkOptions', () => {
   it('is empty when the farm has no fields or animals', async () => {
     await saveFarmProfile(ctx.repos, 'Rooikraal');
     expect(await listTaskLinkOptions(ctx.repos)).toEqual([]);
+  });
+});
+
+describe('markTaskDone', () => {
+  it('flips an open task to done in a single call', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Move the cattle' });
+    expect(task.status).toBe('open');
+
+    const done = await markTaskDone(ctx.repos, task.id);
+    expect(done.status).toBe('done');
+    expect(done.id).toBe(task.id);
+  });
+
+  it('persists the done status so the task reads done on reload', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Order feed' });
+    await markTaskDone(ctx.repos, task.id);
+
+    const stored = await ctx.repos.tasks.get(task.id);
+    expect(stored?.status).toBe('done');
+  });
+
+  it('leaves the task done when marked done again (idempotent)', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const task = await addTask(ctx.repos, { title: 'Spray weeds' });
+    await markTaskDone(ctx.repos, task.id);
+
+    const again = await markTaskDone(ctx.repos, task.id);
+    expect(again.status).toBe('done');
+  });
+
+  it('does not touch the other fields when marking done', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    const fieldId = await seedField();
+    const task = await addTask(ctx.repos, {
+      title: 'Weed the north field',
+      fieldId,
+      assignee: 'Themba',
+      dueDate: Date.parse('2026-10-01'),
+    });
+
+    const done = await markTaskDone(ctx.repos, task.id);
+    expect(done.title).toBe('Weed the north field');
+    expect(done.fieldId).toBe(fieldId);
+    expect(done.assignee).toBe('Themba');
+    expect(done.dueDate).toBe(Date.parse('2026-10-01'));
+  });
+
+  it('rejects a task that does not exist, without writing', async () => {
+    await saveFarmProfile(ctx.repos, 'Rooikraal');
+    await expect(markTaskDone(ctx.repos, 'no-such-task')).rejects.toBeInstanceOf(
+      TaskNotFoundError,
+    );
+    expect(await listTasks(ctx.repos)).toEqual([]);
   });
 });

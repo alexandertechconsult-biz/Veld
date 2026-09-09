@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { ListTodo } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { useNavigate } from '../app/navigationContext';
-import type { Task } from '../data';
+import TaskRow from './TaskRow';
 import { useTasks } from './useTasks';
 import type { TaskLinkOption } from '../data/tasks';
 
@@ -17,32 +17,15 @@ function decodeLink(value: string): { fieldId?: string; livestockId?: string } {
   return kind === 'field' ? { fieldId: id } : { livestockId: id };
 }
 
-/** The label of the field/animal a task links to, or null when it links to none. */
-function linkLabel(task: Task, options: TaskLinkOption[]): string | null {
-  const linkedId = task.fieldId ?? task.livestockId;
-  if (!linkedId) return null;
-  return options.find((option) => option.id === linkedId)?.label ?? null;
-}
-
-/** The one-line summary under a task title: link, assignee and due date. */
-function metaLine(task: Task, options: TaskLinkOption[]): string {
-  const parts: string[] = [];
-  const linked = linkLabel(task, options);
-  if (linked) parts.push(linked);
-  if (task.assignee) parts.push(task.assignee);
-  if (task.dueDate !== undefined) parts.push(`Due ${new Date(task.dueDate).toLocaleDateString()}`);
-  return parts.join(' · ');
-}
-
 /**
  * Tasks module. Create a task (E4-01) — a required title with an optional link
- * to a field or animal/group, a free-text assignee and a due date — and list
- * the farm's tasks. Marking done (E4-02) and edit/delete (E4-03) are separate
- * tickets.
+ * to a field or animal/group, a free-text assignee and a due date — list the
+ * farm's tasks grouped by Open and Done, and mark a task done in a single tap
+ * (E4-02). Edit/delete (E4-03) is a separate ticket.
  */
 export default function TasksScreen() {
   const navigate = useNavigate();
-  const { tasks, linkOptions, status, createTask } = useTasks();
+  const { tasks, linkOptions, status, createTask, markDone } = useTasks();
 
   const [title, setTitle] = useState('');
   const [link, setLink] = useState(NO_LINK);
@@ -70,6 +53,8 @@ export default function TasksScreen() {
 
   const saving = status.kind === 'saving';
   const canSubmit = !saving && title.trim().length > 0;
+  const openTasks = tasks.filter((task) => task.status === 'open');
+  const doneTasks = tasks.filter((task) => task.status === 'done');
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -101,21 +86,35 @@ export default function TasksScreen() {
       {tasks.length === 0 ? (
         <p className="settings-status">No tasks yet. Add your first below.</p>
       ) : (
-        <ul className="record-list" aria-label="Tasks">
-          {tasks.map((task) => {
-            const meta = metaLine(task, linkOptions);
-            return (
-              <li key={task.id} className="record-row">
-                <div className="record-row__main">
-                  <div className="record-row__text">
-                    <span className="record-row__name">{task.title}</span>
-                    {meta ? <span className="record-row__meta">{meta}</span> : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <h3 className="task-group__title">Open</h3>
+          {openTasks.length === 0 ? (
+            <p className="settings-status">No open tasks.</p>
+          ) : (
+            <ul className="record-list" aria-label="Open tasks">
+              {openTasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  options={linkOptions}
+                  onMarkDone={markDone}
+                  busy={saving}
+                />
+              ))}
+            </ul>
+          )}
+
+          {doneTasks.length > 0 ? (
+            <>
+              <h3 className="task-group__title">Done</h3>
+              <ul className="record-list" aria-label="Done tasks">
+                {doneTasks.map((task) => (
+                  <TaskRow key={task.id} task={task} options={linkOptions} />
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </>
       )}
 
       <form className="farm-form" onSubmit={onSubmit}>

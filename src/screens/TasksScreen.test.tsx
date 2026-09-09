@@ -65,7 +65,7 @@ describe('TasksScreen', () => {
     fireEvent.click(button);
 
     await screen.findByText('Task added.');
-    const list = await screen.findByRole('list', { name: 'Tasks' });
+    const list = await screen.findByRole('list', { name: 'Open tasks' });
     expect(list).toHaveTextContent('Fix the north fence');
     // The form clears so the farmer can add another.
     await waitFor(() => expect(screen.getByTestId('task-title-input')).toHaveValue(''));
@@ -98,7 +98,7 @@ describe('TasksScreen', () => {
     const stored = await db.tasks.toArray();
     expect(stored[0]).toMatchObject({ title: 'Move cattle', assignee: 'Themba' });
     expect(stored[0].dueDate).toBe(new Date('2026-10-01').getTime());
-    const list = screen.getByRole('list', { name: 'Tasks' });
+    const list = screen.getByRole('list', { name: 'Open tasks' });
     expect(list).toHaveTextContent('Themba');
   });
 
@@ -115,7 +115,7 @@ describe('TasksScreen', () => {
     await screen.findByText('Task added.');
     const stored = await db.tasks.toArray();
     expect(stored[0]).toMatchObject({ title: 'Spray weeds', fieldId: 'field1' });
-    const list = screen.getByRole('list', { name: 'Tasks' });
+    const list = screen.getByRole('list', { name: 'Open tasks' });
     expect(list).toHaveTextContent('North field');
   });
 
@@ -124,5 +124,61 @@ describe('TasksScreen', () => {
     renderScreen();
     await screen.findByRole('button', { name: 'Add task' });
     expect(screen.queryByTestId('task-link-select')).not.toBeInTheDocument();
+  });
+
+  it('marks a task done in a single tap and moves it to the Done group', async () => {
+    await seedFarm();
+    renderScreen();
+
+    fireEvent.change(await screen.findByTestId('task-title-input'), {
+      target: { value: 'Order feed' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add task' }));
+    await screen.findByText('Order feed');
+
+    // A single tap of the row's mark-done control completes the task.
+    fireEvent.click(screen.getByRole('button', { name: 'Mark "Order feed" done' }));
+
+    await screen.findByText('Task marked done.');
+    await waitFor(async () => {
+      const stored = await db.tasks.toArray();
+      expect(stored[0].status).toBe('done');
+    });
+
+    // It now sits in the Done list, not the Open one.
+    const doneList = screen.getByRole('list', { name: 'Done tasks' });
+    expect(doneList).toHaveTextContent('Order feed');
+    expect(screen.queryByRole('list', { name: 'Open tasks' })).not.toBeInTheDocument();
+    // The completed task no longer offers a mark-done control.
+    expect(
+      screen.queryByRole('button', { name: 'Mark "Order feed" done' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps open and done tasks in separate groups', async () => {
+    await seedFarm();
+    await db.tasks.add({
+      id: 't-done',
+      createdAt: 1,
+      updatedAt: 1,
+      farmId: 'f1',
+      title: 'Already finished',
+      status: 'done',
+    });
+    await db.tasks.add({
+      id: 't-open',
+      createdAt: 2,
+      updatedAt: 2,
+      farmId: 'f1',
+      title: 'Still to do',
+      status: 'open',
+    });
+    renderScreen();
+
+    const openList = await screen.findByRole('list', { name: 'Open tasks' });
+    const doneList = screen.getByRole('list', { name: 'Done tasks' });
+    expect(openList).toHaveTextContent('Still to do');
+    expect(openList).not.toHaveTextContent('Already finished');
+    expect(doneList).toHaveTextContent('Already finished');
   });
 });

@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { repositories } from '../data';
-import type { Task } from '../data';
+import type { ID, Task } from '../data';
 import { loadCurrentFarm } from '../data/farmProfile';
 import {
   EmptyTaskTitleError,
   InvalidDueDateError,
   NoFarmForTaskError,
   TaskLinkNotFoundError,
+  TaskNotFoundError,
   addTask,
   listTaskLinkOptions,
   listTasks,
+  markTaskDone,
   type NewTask,
   type TaskLinkOption,
 } from '../data/tasks';
@@ -28,7 +30,8 @@ function messageFor(error: unknown, fallback: string): string {
   return error instanceof EmptyTaskTitleError ||
     error instanceof NoFarmForTaskError ||
     error instanceof InvalidDueDateError ||
-    error instanceof TaskLinkNotFoundError
+    error instanceof TaskLinkNotFoundError ||
+    error instanceof TaskNotFoundError
     ? error.message
     : fallback;
 }
@@ -90,5 +93,22 @@ export function useTasks() {
     }
   }, []);
 
-  return { tasks, linkOptions, status, createTask };
+  /** Marks a task done in a single call and reloads so it moves to the Done group. */
+  const markDone = useCallback(async (id: ID): Promise<boolean> => {
+    setStatus({ kind: 'saving' });
+    try {
+      await markTaskDone(repositories, id);
+      setTasks(await listTasks(repositories));
+      setStatus({ kind: 'saved', message: 'Task marked done.' });
+      return true;
+    } catch (error) {
+      setStatus({
+        kind: 'error',
+        message: messageFor(error, 'Could not update the task. Please try again.'),
+      });
+      return false;
+    }
+  }, []);
+
+  return { tasks, linkOptions, status, createTask, markDone };
 }

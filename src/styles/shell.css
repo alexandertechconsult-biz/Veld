@@ -537,6 +537,49 @@ select.field__input {
   margin-top: var(--space-3);
 }
 
+/* Tasks module: Open / Done group headings (E4-02). */
+.task-group__title {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+/* Single-tap mark-done control: a 44px target wrapping the outline circle. */
+.task-row__check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.task-row__check:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* The completed marker shown in the Done group. */
+.task-row__done-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+}
+
+.task-row__name--done {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
 /* Inline delete confirmation: names what is removed, then a second explicit tap. */
 .confirm-delete {
   display: flex;
