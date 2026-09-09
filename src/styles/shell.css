@@ -517,6 +517,45 @@ select.field__input {
   margin: 0;
 }
 
+/* Correct/remove controls (E2-06). The destructive variant keeps the secondary
+   button shape but uses --danger, the token the palette reserves for delete. */
+.btn-secondary--danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.record-row__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.event-history__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* Inline delete confirmation: names what is removed, then a second explicit tap. */
+.confirm-delete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.confirm-delete__message {
+  font-size: var(--size-label);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+
+.confirm-delete__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;

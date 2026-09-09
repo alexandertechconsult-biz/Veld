@@ -1,0 +1,73 @@
+
+Running 2 tests using 1 worker
+
+  ✘  1 [mobile-android] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 (5ms)
+  ✘  2 [desktop-chromium] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 (7.3s)
+
+
+  1) [mobile-android] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 
+
+    TimeoutError: browserType.launch: Timeout 180000ms exceeded.
+    Call log:
+      - <launching> /Users/barrettflowers/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-updater-scheduler --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/var/folders/26/3s8ctr4j5v540qgrgbsllwj00000gn/T/playwright_chromiumdev_profile-jIuwgH --remote-debugging-pipe --no-startup-window
+      - <launched> pid=17629
+
+
+    Error Context: e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-mobile-android/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-mobile-android/trace.zip
+    Usage:
+
+        npx playwright show-trace e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-mobile-android/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop-chromium] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('list', { name: 'Event history for ZA-009' })
+    Expected substring: "1 Jan 2026"
+    Received string:    "HealthJan 1, 2026Vaccinated for lumpy skinEdit eventDelete event"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('list', { name: 'Event history for ZA-009' }) with timeout 5000ms
+      - waiting for getByRole('list', { name: 'Event history for ZA-009' })
+        - locator resolved to <ol class="event-history" aria-label="Event history for ZA-009">…</ol>
+        - unexpected value "DateTypeHealthMovementWeightOtherNoteVaccinated for lumpy skinCancelSave eventSaving…"
+        13 × locator resolved to <ol class="event-history" aria-label="Event history for ZA-009">…</ol>
+           - unexpected value "HealthJan 1, 2026Vaccinated for lumpy skinEdit eventDelete event"
+
+
+      58 |   await editForm.getByRole('button', { name: 'Save event' }).click();
+      59 |   await expect(history).toContainText('Vaccinated for lumpy skin');
+    > 60 |   await expect(history).toContainText('1 Jan 2026'); // date unchanged
+         |                         ^
+      61 |
+      62 |   // Reload — a genuine restart — and confirm the corrections persisted.
+      63 |   await page.goto('/#/livestock');
+        at /Users/barrettflowers/Veld-ralph/e2e/specs/e2-06-livestock-edit-delete.spec.ts:60:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-desktop-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-desktop-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-desktop-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-desktop-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace e2e/recordings/E2-06/20260909T065546Z/artifacts/e2-06-livestock-edit-delet-493d7-ts-with-named-confirmations-desktop-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [mobile-android] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 
+    [desktop-chromium] › e2e/specs/e2-06-livestock-edit-delete.spec.ts:12:1 › edits and deletes livestock records and events, with named confirmations @E2-06 

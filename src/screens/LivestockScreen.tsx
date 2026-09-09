@@ -2,25 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Beef } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 import { useNavigate } from '../app/navigationContext';
-import { describeLivestock } from '../data/livestock';
 import { useLivestock } from './useLivestock';
-import EventForm, { type EventFormValues } from './EventForm';
-import EventHistory from './EventHistory';
-
-const ICON_SIZE = 24;
-const ICON_STROKE = 1.5;
-
-/** "3 events" / "1 event"; empty when none, so the meta line stays short. */
-function eventCountLabel(count: number): string {
-  if (count === 0) return '';
-  return count === 1 ? '1 event' : `${count} events`;
-}
+import type { EventFormValues } from './EventForm';
+import LivestockRow from './LivestockRow';
 
 /**
  * Livestock module. Register an animal or group (E2-01) — one record type
  * carries a `count`: 1 reads as an individual with a tag, above 1 as a group
- * (BACKLOG.md Section 9) — log a dated event against any of them (E2-02), and
- * see each animal's event history, most recent first (E2-03).
+ * (BACKLOG.md Section 9) — log a dated event against any of them (E2-02), see
+ * each animal's event history most recent first (E2-03), and correct or remove
+ * any record or event (E2-06).
  */
 export default function LivestockScreen() {
   const navigate = useNavigate();
@@ -31,7 +22,11 @@ export default function LivestockScreen() {
     status,
     eventStatus,
     registerLivestock,
+    editAnimal,
+    removeAnimal,
     logEvent,
+    editEvent,
+    removeEvent,
     resetEventStatus,
   } = useLivestock();
 
@@ -88,6 +83,12 @@ export default function LivestockScreen() {
     }
   }
 
+  function toggleRow(id: string) {
+    const willOpen = openEventFor !== id;
+    if (willOpen) resetEventStatus();
+    setOpenEventFor(willOpen ? id : null);
+  }
+
   async function onLogEvent(livestockId: string, values: EventFormValues): Promise<boolean> {
     const logged = await logEvent({ livestockId, ...values });
     if (logged) {
@@ -110,48 +111,23 @@ export default function LivestockScreen() {
         <p className="settings-status">No animals or groups yet. Register your first below.</p>
       ) : (
         <ul className="record-list" aria-label="Livestock">
-          {animals.map((animal) => {
-            const { countLabel } = describeLivestock(animal);
-            const history = eventsByAnimal[animal.id] ?? [];
-            const events = eventCountLabel(history.length);
-            const isOpen = openEventFor === animal.id;
-            return (
-              <li key={animal.id} className="record-row">
-                <div className="record-row__main">
-                  <Beef size={ICON_SIZE} strokeWidth={ICON_STROKE} aria-hidden="true" />
-                  <span className="record-row__text">
-                    <span className="record-row__name">{animal.name}</span>
-                    <span className="record-row__meta">
-                      {animal.species} · {countLabel}
-                      {events ? ` · ${events}` : ''}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    className="btn-secondary record-row__action"
-                    aria-expanded={isOpen}
-                    onClick={() => {
-                      if (!isOpen) resetEventStatus();
-                      setOpenEventFor(isOpen ? null : animal.id);
-                    }}
-                  >
-                    {isOpen ? 'Close' : 'Log event'}
-                  </button>
-                </div>
-                {isOpen ? (
-                  <div className="record-row__panel">
-                    <EventHistory animalName={animal.name} events={history} />
-                    <EventForm
-                      animalName={animal.name}
-                      status={eventStatus}
-                      onLog={(values) => onLogEvent(animal.id, values)}
-                      onCancel={() => setOpenEventFor(null)}
-                    />
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
+          {animals.map((animal) => (
+            <LivestockRow
+              key={animal.id}
+              animal={animal}
+              history={eventsByAnimal[animal.id] ?? []}
+              status={status}
+              eventStatus={eventStatus}
+              isOpen={openEventFor === animal.id}
+              onToggle={() => toggleRow(animal.id)}
+              onEditAnimal={(changes) => editAnimal(animal.id, changes)}
+              onRemoveAnimal={() => removeAnimal(animal.id)}
+              onLogEvent={(values) => onLogEvent(animal.id, values)}
+              onEditEvent={(id, changes) => editEvent(id, changes)}
+              onRemoveEvent={(id) => removeEvent(id)}
+              resetEventStatus={resetEventStatus}
+            />
+          ))}
         </ul>
       )}
 
@@ -236,7 +212,7 @@ export default function LivestockScreen() {
       ) : null}
       {status.kind === 'saved' ? (
         <p className="settings-status settings-status--success" role="status">
-          Animal registered.
+          {status.message}
         </p>
       ) : null}
       {status.kind === 'error' ? (

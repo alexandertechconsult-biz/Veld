@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   EmptyEventNoteError,
+  EventNotFoundError,
   InvalidEventDateError,
   InvalidEventTypeError,
   NoLivestockRecordError,
   addEvent,
+  deleteEvent,
   listEventsFor,
+  updateEvent,
 } from './events';
 import { addLivestock } from './livestock';
 import { addEnterprise } from './enterprises';
@@ -163,5 +166,107 @@ describe('listEventsFor', () => {
     const events = await listEventsFor(ctx.repos, livestockId);
     expect(events).toHaveLength(1);
     expect(events[0].note).toBe('Vaccinated');
+  });
+});
+
+describe('updateEvent', () => {
+  /** Log one event and return it, for the correction tests. */
+  async function seedEvent() {
+    const livestockId = await seedAnimal();
+    return addEvent(ctx.repos, {
+      livestockId,
+      date: Date.UTC(2026, 8, 8),
+      type: 'health',
+      note: 'Vaccinated',
+    });
+  }
+
+  it('corrects the note and type', async () => {
+    const event = await seedEvent();
+    const updated = await updateEvent(ctx.repos, event.id, {
+      note: 'Vaccinated for lumpy skin',
+      type: 'movement',
+    });
+    expect(updated.note).toBe('Vaccinated for lumpy skin');
+    expect(updated.type).toBe('movement');
+  });
+
+  it('keeps the original date when only the note is corrected (E2-06)', async () => {
+    const event = await seedEvent();
+    const updated = await updateEvent(ctx.repos, event.id, { note: 'Reworded' });
+    expect(updated.date).toBe(event.date);
+  });
+
+  it('changes the date only when the date is the thing being corrected', async () => {
+    const event = await seedEvent();
+    const corrected = Date.UTC(2026, 8, 1);
+    const updated = await updateEvent(ctx.repos, event.id, { date: corrected });
+    expect(updated.date).toBe(corrected);
+    expect(updated.note).toBe('Vaccinated');
+  });
+
+  it('trims a corrected note and rejects a blank one without writing', async () => {
+    const event = await seedEvent();
+    await expect(updateEvent(ctx.repos, event.id, { note: '   ' })).rejects.toBeInstanceOf(
+      EmptyEventNoteError,
+    );
+    const events = await listEventsFor(ctx.repos, event.livestockId);
+    expect(events[0].note).toBe('Vaccinated');
+  });
+
+  it('rejects a non-finite date and an unknown type without writing', async () => {
+    const event = await seedEvent();
+    await expect(updateEvent(ctx.repos, event.id, { date: Number.NaN })).rejects.toBeInstanceOf(
+      InvalidEventDateError,
+    );
+    await expect(
+      updateEvent(ctx.repos, event.id, { type: 'bogus' as never }),
+    ).rejects.toBeInstanceOf(InvalidEventTypeError);
+    const events = await listEventsFor(ctx.repos, event.livestockId);
+    expect(events[0]).toMatchObject({ type: 'health', date: event.date });
+  });
+
+  it('refuses to update an event that does not exist', async () => {
+    await expect(updateEvent(ctx.repos, 'nope', { note: 'x' })).rejects.toBeInstanceOf(
+      EventNotFoundError,
+    );
+  });
+
+  it('persists a correction across a close and reopen', async () => {
+    const event = await seedEvent();
+    await updateEvent(ctx.repos, event.id, { note: 'Corrected' });
+
+    ctx.db.close();
+    await ctx.db.open();
+
+    const events = await listEventsFor(ctx.repos, event.livestockId);
+    expect(events[0].note).toBe('Corrected');
+  });
+});
+
+describe('deleteEvent', () => {
+  it('removes one event and leaves the others', async () => {
+    const livestockId = await seedAnimal();
+    const first = await addEvent(ctx.repos, {
+      livestockId,
+      date: Date.UTC(2026, 8, 1),
+      type: 'health',
+      note: 'First',
+    });
+    await addEvent(ctx.repos, {
+      livestockId,
+      date: Date.UTC(2026, 8, 8),
+      type: 'movement',
+      note: 'Second',
+    });
+
+    await deleteEvent(ctx.repos, first.id);
+
+    const events = await listEventsFor(ctx.repos, livestockId);
+    expect(events.map((e) => e.note)).toEqual(['Second']);
+  });
+
+  it('is a no-op for an event that does not exist', async () => {
+    await expect(deleteEvent(ctx.repos, 'nope')).resolves.toBeUndefined();
   });
 });

@@ -14,9 +14,15 @@ interface EventFormProps {
   /** Name/tag of the animal or group the event is logged against, for context. */
   animalName: string;
   status: EventStatus;
-  /** Returns true when the event saved, so the form can reset. */
+  /** Returns true when the event saved, so the form can reset or close. */
   onLog: (values: EventFormValues) => Promise<boolean>;
   onCancel: () => void;
+  /** Pre-fill the form when correcting an existing event (E2-06). */
+  initial?: EventFormValues;
+  /** Submit button text; defaults to logging a new event. */
+  submitLabel?: string;
+  /** Accessible form name; defaults to the log-an-event phrasing. */
+  title?: string;
 }
 
 /** Today as an ISO date string (YYYY-MM-DD) for the date input's default. */
@@ -24,23 +30,42 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** An epoch-ms date as the YYYY-MM-DD the date input expects. */
+function toDateInput(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 /**
- * Presentational form to log one event against an animal or group (E2-02): a
- * date (defaults to today), a type, and a note. All persistence lives in the
- * `useLivestock` hook — this component only collects and validates input shape.
+ * Presentational form for one event against an animal or group. Used both to
+ * log a new event (E2-02) and, pre-filled via `initial`, to correct one (E2-06).
+ * All persistence lives in the `useLivestock` hook — this component only
+ * collects and shapes input. When `initial` omits a field the parent chooses
+ * not to preserve it; but since it is always passed whole here, an edit keeps
+ * the event's original date unless the farmer changes the date field.
  */
-export default function EventForm({ animalName, status, onLog, onCancel }: EventFormProps) {
-  const [date, setDate] = useState(today);
-  const [type, setType] = useState<EventType>('health');
-  const [note, setNote] = useState('');
+export default function EventForm({
+  animalName,
+  status,
+  onLog,
+  onCancel,
+  initial,
+  submitLabel = 'Log event',
+  title,
+}: EventFormProps) {
+  const [date, setDate] = useState(() => (initial ? toDateInput(initial.date) : today()));
+  const [type, setType] = useState<EventType>(initial?.type ?? 'health');
+  const [note, setNote] = useState(initial?.note ?? '');
 
   const saving = status.kind === 'saving';
   const canSubmit = !saving && date.length > 0 && note.trim().length > 0;
+  const formTitle = title ?? `Log an event for ${animalName}`;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const logged = await onLog({ date: new Date(date).getTime(), type, note });
-    if (logged) {
+    const saved = await onLog({ date: new Date(date).getTime(), type, note });
+    if (saved && !initial) {
+      // A fresh log-form resets for the next entry; an edit form is closed by
+      // its parent, so there is nothing to reset.
       setType('health');
       setNote('');
       setDate(today());
@@ -48,7 +73,7 @@ export default function EventForm({ animalName, status, onLog, onCancel }: Event
   }
 
   return (
-    <form className="event-form" onSubmit={onSubmit} aria-label={`Log an event for ${animalName}`}>
+    <form className="event-form" onSubmit={onSubmit} aria-label={formTitle}>
       <label className="field">
         <span className="field__label">Date</span>
         <input
@@ -96,7 +121,7 @@ export default function EventForm({ animalName, status, onLog, onCancel }: Event
           Cancel
         </button>
         <button type="submit" className="btn-primary" disabled={!canSubmit}>
-          Log event
+          {submitLabel}
         </button>
       </div>
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import EventHistory from './EventHistory';
 import type { Event } from '../data';
+import type { EventStatus } from './useLivestock';
 
 /** An event with sensible defaults, overridable per test. */
 function makeEvent(overrides: Partial<Event>): Event {
@@ -17,20 +18,34 @@ function makeEvent(overrides: Partial<Event>): Event {
   };
 }
 
+const IDLE: EventStatus = { kind: 'idle' };
+const noop = async () => true;
+
+/** Render with the edit/delete wiring stubbed; E2-06 behaviour is covered on the screen. */
+function renderHistory(animalName: string, events: Event[]) {
+  return render(
+    <EventHistory
+      animalName={animalName}
+      events={events}
+      status={IDLE}
+      onEditEvent={noop}
+      onDeleteEvent={noop}
+      resetStatus={() => {}}
+    />,
+  );
+}
+
 describe('EventHistory', () => {
   it('tells the farmer when no events have been logged yet', () => {
-    render(<EventHistory animalName="ZA-001" events={[]} />);
+    renderHistory('ZA-001', []);
     expect(screen.getByText('No events logged yet.')).toBeInTheDocument();
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 
   it('renders each event with its type label and note', () => {
-    render(
-      <EventHistory
-        animalName="ZA-001"
-        events={[makeEvent({ id: 'ev1', type: 'movement', note: 'Moved to north camp' })]}
-      />,
-    );
+    renderHistory('ZA-001', [
+      makeEvent({ id: 'ev1', type: 'movement', note: 'Moved to north camp' }),
+    ]);
     const list = screen.getByRole('list', { name: 'Event history for ZA-001' });
     expect(list).toHaveTextContent('Movement');
     expect(list).toHaveTextContent('Moved to north camp');
@@ -43,7 +58,7 @@ describe('EventHistory', () => {
       makeEvent({ id: 'ev-new', date: Date.parse('2026-09-08'), note: 'Newest' }),
       makeEvent({ id: 'ev-old', date: Date.parse('2026-01-01'), note: 'Oldest' }),
     ];
-    render(<EventHistory animalName="ZA-001" events={events} />);
+    renderHistory('ZA-001', events);
     const rows = within(screen.getByRole('list')).getAllByRole('listitem');
     expect(rows[0]).toHaveTextContent('Newest');
     expect(rows[1]).toHaveTextContent('Oldest');

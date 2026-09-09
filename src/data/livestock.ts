@@ -42,6 +42,14 @@ export class NoLivestockEnterpriseError extends Error {
   }
 }
 
+/** Raised when editing or deleting a record that no longer exists (E2-06). */
+export class LivestockNotFoundError extends Error {
+  constructor() {
+    super('That animal or group no longer exists.');
+    this.name = 'LivestockNotFoundError';
+  }
+}
+
 /** The fields a caller supplies to register an animal or group. */
 export interface NewLivestock {
   enterpriseId: ID;
@@ -49,6 +57,17 @@ export interface NewLivestock {
   name: string;
   species: string;
   count: number;
+}
+
+/**
+ * A correction to an existing record (E2-06): every field is optional, so a
+ * caller can change just the name or just the count. An omitted field is left
+ * exactly as it was — only what is supplied is validated and written.
+ */
+export interface LivestockEdit {
+  name?: string;
+  species?: string;
+  count?: number;
 }
 
 /** Whether a record reads as one tagged animal or a batch/group. */
@@ -120,4 +139,54 @@ export async function addLivestock(
     species,
     count: input.count,
   });
+}
+
+/**
+ * Corrects an existing animal or group (E2-06). Validates only the fields the
+ * caller supplies — trims and rejects a blank name/species without writing, and
+ * rejects a count that is not a whole number of one or more — then leaves every
+ * other field untouched. Requires the record to exist.
+ */
+export async function updateLivestock(
+  repos: Repositories,
+  id: ID,
+  changes: LivestockEdit,
+): Promise<LivestockRecord> {
+  const existing = await repos.livestock.get(id);
+  if (!existing) {
+    throw new LivestockNotFoundError();
+  }
+  const patch: LivestockEdit = {};
+  if (changes.name !== undefined) {
+    const name = changes.name.trim();
+    if (!name) {
+      throw new EmptyLivestockNameError();
+    }
+    patch.name = name;
+  }
+  if (changes.species !== undefined) {
+    const species = changes.species.trim();
+    if (!species) {
+      throw new EmptySpeciesError();
+    }
+    patch.species = species;
+  }
+  if (changes.count !== undefined) {
+    if (!Number.isInteger(changes.count) || changes.count < 1) {
+      throw new InvalidCountError();
+    }
+    patch.count = changes.count;
+  }
+  return repos.livestock.update(id, patch);
+}
+
+/**
+ * Removes an animal or group and every event logged against it, so deleting a
+ * record never leaves orphaned events behind (E2-06). Idempotent: deleting a
+ * record that is already gone is a no-op.
+ */
+export async function deleteLivestock(repos: Repositories, id: ID): Promise<void> {
+  const events = await repos.events.listByLivestock(id);
+  await Promise.all(events.map((event) => repos.events.delete(event.id)));
+  await repos.livestock.delete(id);
 }

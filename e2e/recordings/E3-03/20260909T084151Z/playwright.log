@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [mobile-android] › e2e/specs/e3-03-activity-history.spec.ts:11:1 › shows a field activity history, most recent first, that survives a reload @E3-03 (1.8s)
+  ✓  2 [desktop-chromium] › e2e/specs/e3-03-activity-history.spec.ts:11:1 › shows a field activity history, most recent first, that survives a reload @E3-03 (1.1s)
+
+  2 passed (6.1s)

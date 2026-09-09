@@ -52,6 +52,14 @@ export class NoLivestockRecordError extends Error {
   }
 }
 
+/** Raised when editing or deleting an event that no longer exists (E2-06). */
+export class EventNotFoundError extends Error {
+  constructor() {
+    super('That event no longer exists.');
+    this.name = 'EventNotFoundError';
+  }
+}
+
 /** The fields a caller supplies to log an event. */
 export interface NewEvent {
   livestockId: ID;
@@ -59,6 +67,17 @@ export interface NewEvent {
   date: number;
   type: EventType;
   note: string;
+}
+
+/**
+ * A correction to an existing event (E2-06): every field is optional. An
+ * omitted field is left untouched — in particular an event keeps its original
+ * date unless the date is itself the thing being corrected.
+ */
+export interface EventEdit {
+  date?: number;
+  type?: EventType;
+  note?: string;
 }
 
 const KNOWN_TYPES: readonly EventType[] = EVENT_TYPES.map((entry) => entry.value);
@@ -98,4 +117,48 @@ export async function addEvent(repos: Repositories, input: NewEvent): Promise<Ev
     type: input.type,
     note,
   });
+}
+
+/**
+ * Corrects an existing event (E2-06). Validates only the fields the caller
+ * supplies — trims and rejects a blank note without writing, rejects a
+ * non-finite date and an unknown type — and leaves the rest as they were, so
+ * the original date survives any edit that does not touch it. Requires the
+ * event to exist.
+ */
+export async function updateEvent(
+  repos: Repositories,
+  id: ID,
+  changes: EventEdit,
+): Promise<Event> {
+  const existing = await repos.events.get(id);
+  if (!existing) {
+    throw new EventNotFoundError();
+  }
+  const patch: EventEdit = {};
+  if (changes.note !== undefined) {
+    const note = changes.note.trim();
+    if (!note) {
+      throw new EmptyEventNoteError();
+    }
+    patch.note = note;
+  }
+  if (changes.date !== undefined) {
+    if (!Number.isFinite(changes.date)) {
+      throw new InvalidEventDateError();
+    }
+    patch.date = changes.date;
+  }
+  if (changes.type !== undefined) {
+    if (!KNOWN_TYPES.includes(changes.type)) {
+      throw new InvalidEventTypeError();
+    }
+    patch.type = changes.type;
+  }
+  return repos.events.update(id, patch);
+}
+
+/** Removes one event. Idempotent: deleting a missing event is a no-op (E2-06). */
+export async function deleteEvent(repos: Repositories, id: ID): Promise<void> {
+  await repos.events.delete(id);
 }
