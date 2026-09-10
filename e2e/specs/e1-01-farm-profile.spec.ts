@@ -15,7 +15,7 @@ test('saves a farm name and it survives a reload', { tag: '@E1-01' }, async ({ p
   await input.fill('Rooikraal Farm');
   await page.getByRole('button', { name: 'Create farm' }).click();
 
-  await expect(page.getByText('Farm saved.')).toBeVisible();
+  await expect(page.getByText('Farm created.')).toBeVisible();
   // Once a farm exists the action becomes a rename.
   await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
 
@@ -27,7 +27,7 @@ test('saves a farm name and it survives a reload', { tag: '@E1-01' }, async ({ p
   // Renaming keeps a single farm; the new name persists too.
   await page.getByTestId('farm-name-input').fill('Rooikraal Estate');
   await page.getByRole('button', { name: 'Save changes' }).click();
-  await expect(page.getByText('Farm saved.')).toBeVisible();
+  await expect(page.getByText('Changes saved.')).toBeVisible();
 
   await page.reload();
   await expect(page.getByTestId('farm-name-input')).toHaveValue('Rooikraal Estate');

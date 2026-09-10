@@ -9,7 +9,7 @@ export type FarmProfileStatus =
   | { kind: 'loading' }
   | { kind: 'ready' }
   | { kind: 'saving' }
-  | { kind: 'saved' }
+  | { kind: 'saved'; message: string }
   | { kind: 'error'; message: string };
 
 /**
@@ -39,20 +39,29 @@ export function useFarmProfile() {
     };
   }, []);
 
-  const saveFarm = useCallback(async (name: string) => {
-    setStatus({ kind: 'saving' });
-    try {
-      const saved = await saveFarmProfile(repositories, name);
-      setFarm(saved);
-      setStatus({ kind: 'saved' });
-    } catch (error) {
-      const message =
-        error instanceof EmptyFarmNameError
-          ? error.message
-          : 'Could not save your farm. Please try again.';
-      setStatus({ kind: 'error', message });
-    }
-  }, []);
+  const saveFarm = useCallback(
+    async (name: string) => {
+      // Whether this is the first-ever save (create) or a correction (E1-05)
+      // decides which confirmation the farmer sees. Read it before the write.
+      const correcting = farm !== null;
+      setStatus({ kind: 'saving' });
+      try {
+        const saved = await saveFarmProfile(repositories, name);
+        setFarm(saved);
+        setStatus({
+          kind: 'saved',
+          message: correcting ? 'Changes saved.' : 'Farm created.',
+        });
+      } catch (error) {
+        const message =
+          error instanceof EmptyFarmNameError
+            ? error.message
+            : 'Could not save your farm. Please try again.';
+        setStatus({ kind: 'error', message });
+      }
+    },
+    [farm],
+  );
 
   return { farm, status, saveFarm };
 }

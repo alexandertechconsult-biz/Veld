@@ -2,9 +2,11 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useFarmProfile } from './useFarmProfile';
 
 /**
- * Farm profile setup (E1-01). One field — the farm name — saved to IndexedDB so
- * the app knows the operation exists. Pre-fills the existing name when a farm is
- * already set up; otherwise prompts to create one.
+ * Farm profile (E1-01 create, E1-05 correct). One field — the farm name — saved
+ * to IndexedDB so the app knows the operation exists. Pre-fills the existing name
+ * when a farm is already set up, so the farmer can correct it; otherwise prompts
+ * to create one. There is deliberately no delete: the farm is the root record
+ * (BACKLOG.md E1-05), so removing it would orphan every enterprise and log.
  */
 export default function FarmProfile() {
   const { farm, status, saveFarm } = useFarmProfile();
@@ -31,7 +33,9 @@ export default function FarmProfile() {
         Farm profile
       </h2>
       <p className="settings-section__hint">
-        Name your farm so the app knows your operation exists. You can change it any time.
+        {farm
+          ? 'Correct your farm name here any time. It stays saved on this device.'
+          : 'Name your farm so the app knows your operation exists. You can change it any time.'}
       </p>
 
       {loading ? (
@@ -70,7 +74,7 @@ export default function FarmProfile() {
       ) : null}
       {status.kind === 'saved' ? (
         <p className="settings-status settings-status--success" role="status">
-          Farm saved.
+          {status.message}
         </p>
       ) : null}
       {status.kind === 'error' ? (
