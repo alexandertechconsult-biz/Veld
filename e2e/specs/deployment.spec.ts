@@ -17,10 +17,16 @@ test.describe('production deployment', () => {
     expect(response?.status()).toBe(200);
     expect(new URL(page.url()).protocol).toBe('https:');
 
+    // A device that has never opened the app lands on the first-run flow; one that
+    // has already been set up lands on the shell. Both are healthy deployments.
+    const firstRun = page.getByRole('heading', { name: 'Name your farm' });
     const nav = page.getByRole('navigation');
-    await expect(nav).toBeVisible();
-    for (const label of ['Home', 'Livestock', 'Crops', 'Tasks', 'More']) {
-      await expect(nav.getByText(label, { exact: true })).toBeVisible();
+    await expect(firstRun.or(nav).first()).toBeVisible();
+
+    if (await nav.isVisible()) {
+      for (const label of ['Home', 'Livestock', 'Crops', 'Tasks', 'More']) {
+        await expect(nav.getByText(label, { exact: true })).toBeVisible();
+      }
     }
 
     const manifestHref = await page.locator('link[rel="manifest"]').getAttribute('href');

@@ -128,6 +128,13 @@ this is a touch device first.
 
 **Button, secondary.** 44px tall, transparent fill, 1px `--border`, `--text` label.
 
+**Disabled state.** Currently implemented as `opacity: 0.5` on the whole button, which
+drops the label to 2.73:1 against its own fill. That is below the 7:1 floor this system
+sets for sunlight. WCAG exempts disabled controls, so this is not a defect, but it was
+never a decision either. If a farmer in bright light needs to read a disabled button to
+understand why they cannot proceed, define a real token pair instead of fading the
+enabled one. Open.
+
 **List row.** 64px minimum height, `--surface` fill, 1px bottom hairline, 16px horizontal
 padding. Left: icon at 24px. Centre: title at Body, secondary line at Label in `--text-muted`.
 Right: chevron or value. The whole row is the tap target.
