@@ -41,7 +41,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E7-01  Home screen showing recent activity across all modules  | tests: 281/281 unit, 2/2 e2e  | e2e: e2e/recordings/E7-01/20260909T165000Z  | commit: ee16633
 - DONE  E7-02  Quick-add sheet — "+" logs any of four types in under three taps from Home  | tests: 292/292 unit, 2/2 e2e  | e2e: e2e/recordings/E7-02/20260910T045951Z  | commit: 29b8bc2
 - DONE  E1-05  Correct the farm name/details from Settings (no delete)  | tests: 294/294 unit, 2/2 e2e  | e2e: e2e/recordings/E1-05/20260910T053142Z  | commit: 02b4429
-- DONE  E1-03  Guided first-run flow — walk farm name, then first enterprise, then done  | tests: 305/305 unit, 2/2 e2e  | e2e: e2e/recordings/E1-03/20260910T054320Z  | commit: PENDING
+- DONE  E1-03  Guided first-run flow — walk farm name, then first enterprise, then done  | tests: 305/305 unit, 2/2 e2e  | e2e: e2e/recordings/E1-03/20260910T054320Z  | commit: f07b7e2
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
