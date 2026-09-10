@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { repositories } from '../data';
 import { loadCurrentFarm } from '../data/farmProfile';
 import { listRecentActivity, type ActivityEntry } from '../data/recentActivity';
@@ -19,6 +19,10 @@ export function useRecentActivity() {
   const [entries, setEntries] = useState<ActivityEntry[]>([]);
   const [hasFarm, setHasFarm] = useState(false);
   const [status, setStatus] = useState<HomeStatus>({ kind: 'loading' });
+  // Bumped to re-run the load — e.g. after the quick-add sheet logs something.
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -41,7 +45,7 @@ export function useRecentActivity() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadKey]);
 
-  return { entries, hasFarm, status };
+  return { entries, hasFarm, status, reload };
 }

@@ -62,6 +62,23 @@ describe('HomeScreen', () => {
     expect(screen.queryByRole('button', { name: 'Set up your farm' })).not.toBeInTheDocument();
   });
 
+  it('opens the quick-add sheet from the "+" action when a farm exists', async () => {
+    await seedFarm();
+    renderScreen();
+
+    const trigger = await screen.findByTestId('quick-add-trigger');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    trigger.click();
+    expect(await screen.findByRole('dialog', { name: 'Log something' })).toBeInTheDocument();
+  });
+
+  it('does not offer quick-add before a farm exists', async () => {
+    renderScreen();
+
+    await screen.findByRole('button', { name: 'Set up your farm' });
+    expect(screen.queryByTestId('quick-add-trigger')).not.toBeInTheDocument();
+  });
+
   it('lists mixed entry types newest first, capped at five', async () => {
     await seedFarm();
     // Six entries across all modules with increasing dates; the oldest must drop.

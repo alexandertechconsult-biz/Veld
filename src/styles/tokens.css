@@ -55,6 +55,9 @@
   --radius: 8px;
   --radius-sheet: 16px;
   --border-width: 1px;
+  /* Bottom-sheet backdrop. Derived from --primary (#01472E) at low alpha, the
+   * same way --border is; no new colour is introduced (see tokens.test.ts). */
+  --scrim: rgba(1, 71, 46, 0.4);
 
   /* Motion (section 9) */
   --motion-duration: 150ms;
