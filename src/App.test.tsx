@@ -9,11 +9,13 @@ describe('App shell', () => {
     window.location.hash = '';
   });
 
-  it('renders the Home screen title and its empty state', () => {
+  it('renders the Home screen title and its empty state', async () => {
     render(<App />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Home');
+    // Home now loads its recent-activity feed asynchronously; with no farm it
+    // settles on the set-up-your-farm empty state.
     expect(
-      screen.getByText('No activity yet. Set up your farm to start logging.'),
+      await screen.findByText('No activity yet. Set up your farm to start logging.'),
     ).toBeInTheDocument();
   });
 
