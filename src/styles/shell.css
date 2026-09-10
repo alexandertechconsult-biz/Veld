@@ -719,6 +719,44 @@ select.field__input {
   gap: var(--space-4);
 }
 
+/* Guided first-run flow (E1-03): a centred single-column takeover shown before
+   the shell on the very first launch, walking farm name then first enterprise. */
+.first-run {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+.first-run__card {
+  width: 100%;
+  max-width: var(--content-max);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.first-run__step {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+.first-run__title {
+  font-size: var(--size-title);
+  line-height: var(--leading-title);
+  font-weight: var(--weight-semibold);
+}
+
+.first-run__hint {
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;
