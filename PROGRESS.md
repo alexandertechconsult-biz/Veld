@@ -44,7 +44,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E1-03  Guided first-run flow — walk farm name, then first enterprise, then done  | tests: 305/305 unit, 2/2 e2e  | e2e: e2e/recordings/E1-03/20260910T054320Z  | commit: f07b7e2
 - DONE  GATE-1  Phase 1 human checkpoint — cleared by Barrett, Phase 2 authorised  | evidence: 17 Phase 1 tickets DONE, 305/305 unit, live at https://veld-six.vercel.app/
 - DONE  E8-01  Pre-populated demo farm seed data  | tests: 318/318 unit, 2/2 e2e  | e2e: e2e/recordings/E8-01/20260911T071509Z  | commit: 895f125
-- DONE  E8-02  Installable PWA loads demo on first open, airplane-mode logging  | tests: 318/318 unit, 2/2 e2e  | e2e: e2e/recordings/E8-02/20260911T072501Z  | commit: <pending>
+- DONE  E8-02  Installable PWA loads demo on first open, airplane-mode logging  | tests: 318/318 unit, 2/2 e2e  | e2e: e2e/recordings/E8-02/20260911T072501Z  | commit: 885f8f1
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
