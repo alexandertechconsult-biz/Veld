@@ -42,6 +42,7 @@ to the Log below and STOP. Barrett clears it by replacing that line with `PASSED
 - DONE  E7-02  Quick-add sheet — "+" logs any of four types in under three taps from Home  | tests: 292/292 unit, 2/2 e2e  | e2e: e2e/recordings/E7-02/20260910T045951Z  | commit: 29b8bc2
 - DONE  E1-05  Correct the farm name/details from Settings (no delete)  | tests: 294/294 unit, 2/2 e2e  | e2e: e2e/recordings/E1-05/20260910T053142Z  | commit: 02b4429
 - DONE  E1-03  Guided first-run flow — walk farm name, then first enterprise, then done  | tests: 305/305 unit, 2/2 e2e  | e2e: e2e/recordings/E1-03/20260910T054320Z  | commit: f07b7e2
+- DONE  GATE-1  Phase 1 human checkpoint — cleared by Barrett, Phase 2 authorised  | evidence: 17 Phase 1 tickets DONE, 305/305 unit, live at https://veld-six.vercel.app/
 
 ## In progress
 <!-- the loop writes STARTED here on entry; should be empty between iterations -->
@@ -51,7 +52,7 @@ _Empty._
 ## Blocked
 <!-- format: - BLOCKED  <TICKET-ID>  — <reason>  — <smallest unblocking question> -->
 
-- BLOCKED  GATE-1  — awaiting human verification; every Phase 2 ticket depends on it, so the loop cannot advance  — Barrett: log a real day's activity end to end on your phone, confirm the three-tap rule holds, then replace the GATE-1 line in the Log with `PASSED: GATE-1 @ <timestamp>`.
+_None._
 
 ## Log
 <!-- chronological, append-only; STARTED, DONE, BLOCKED and completion markers with timestamps -->
@@ -137,3 +138,4 @@ _Empty._
 - Next eligible: GATE-1 (Seq 25) — the Phase 1 human checkpoint. Every Phase 1 ticket (Seq 7–24) is now DONE, so GATE-1 is the next item. It is a human checkpoint the loop must not attempt.
 - 2026-09-10 — BLOCKED: GATE-1 — awaiting human verification. All Phase 1 tickets (Seq 7–24) are DONE and every Phase 2 ticket (E8-01/E8-02/E6-05) depends on GATE-1, so no buildable ticket exists. Barrett must log a real day's activity end to end on his phone and confirm the three-tap rule holds, then clear this by replacing this line with `PASSED: GATE-1 @ <timestamp>`.
 - 2026-09-08 — DONE E2-03. See a history of events per animal or group in the Livestock module. The chronological ordering already lived in the data layer (`listEventsFor` → `mostRecentFirst`, most recent first) from E2-02; this ticket surfaces it. `useLivestock` now stores each animal's full event array (`eventsByAnimal`) instead of only a count — `loadEvents` replaces `loadEventCounts`, so the history and the row's "N events" badge derive from one source (no second query, no discarded data). New presentational `EventHistory.tsx` renders the events it is given, in order, as an ordered list (type label from the single EVENT_TYPES source, human date via `toLocaleDateString`, note), with a "No events logged yet." empty state; it does no sorting or persistence of its own. Shown inside the expanded row above the log-event form via a new `.record-row__panel`. New `.event-history*` CSS uses only design-system tokens (`--surface-sunk`, `--radius`, spacing, text/label sizes) so the colour-guard test stays green. Vitest 113/113 (5 new: 3 EventHistory — empty, render type+note, order-preserved; 2 LivestockScreen — seeded out-of-order renders newest-first + badge, and log-then-appears-in-history with the empty-state assertion). Typecheck + build clean. Review: APPROVE_WITH_NITS (unreachable invalid-date `<time>` guard and the pre-existing N-query event load both deferred; no observability layer in this client PWA, consistent with prior tickets). Evidence: e2e/recordings/E2-03/20260908T203926Z — farm → livestock enterprise → animal → log older + newer event → history lists newest-first → reload persists order, 2/2 on mobile+desktop.
+- 2026-09-11 — PASSED: GATE-1. Barrett authorised Phase 2. Eligible: E8-01, then E8-02. E6-05 already DONE. Ends at GATE-2.
