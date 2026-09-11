@@ -15,6 +15,9 @@ interface FirstRunFlowProps {
   onCreateFarm: (name: string) => Promise<boolean>;
   /** Persists the first enterprise; resolves true when saved so the flow advances. */
   onAddEnterprise: (name: string, type: EnterpriseType) => Promise<boolean>;
+  /** Loads the pre-populated demo farm (E8-01) instead of manual setup. On
+   *  success the app hands off to the shell, so no local step change is needed. */
+  onLoadDemo: () => Promise<boolean>;
   /** Called when the farmer finishes, so the app hands off to the shell. */
   onDone: () => void;
 }
@@ -30,6 +33,7 @@ export default function FirstRunFlow({
   error,
   onCreateFarm,
   onAddEnterprise,
+  onLoadDemo,
   onDone,
 }: FirstRunFlowProps) {
   const [step, setStep] = useState<Step>('farm');
@@ -86,6 +90,18 @@ export default function FirstRunFlow({
                 Continue
               </button>
             </form>
+            <div className="first-run__demo">
+              <p className="first-run__demo-hint">Just want to look around first?</p>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => void onLoadDemo()}
+                disabled={saving}
+                data-testid="first-run-load-demo"
+              >
+                Load a demo farm
+              </button>
+            </div>
           </>
         ) : null}
 
