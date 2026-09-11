@@ -5,7 +5,7 @@ import { db } from '../data';
 
 // useFirstRun talks to the singleton database; start each test from empty.
 beforeEach(async () => {
-  await Promise.all([db.enterprises.clear(), db.farms.clear()]);
+  await Promise.all(db.tables.map((table) => table.clear()));
 });
 
 describe('useFirstRun', () => {
@@ -66,5 +66,39 @@ describe('useFirstRun', () => {
     const enterprises = await db.enterprises.toArray();
     expect(enterprises).toHaveLength(1);
     expect(enterprises[0]).toMatchObject({ name: 'Beef herd', type: 'livestock' });
+  });
+
+  it('loadDemo seeds a demo farm and completes the flow', async () => {
+    const { result } = renderHook(() => useFirstRun());
+    await waitFor(() => expect(result.current.status).toBe('needed'));
+
+    let seeded = false;
+    await act(async () => {
+      seeded = await result.current.loadDemo();
+    });
+
+    expect(seeded).toBe(true);
+    expect(result.current.status).toBe('complete');
+    // The demo farm and its records were written to the singleton database.
+    expect(await db.farms.toArray()).toHaveLength(1);
+    expect((await db.livestock.toArray()).length).toBeGreaterThan(0);
+    expect((await db.fields.toArray()).length).toBeGreaterThan(0);
+  });
+
+  it('loadDemo refuses when a farm already exists, reporting a readable error', async () => {
+    await db.farms.add({ id: 'f1', createdAt: 1, updatedAt: 1, name: 'My Real Farm' });
+    const { result } = renderHook(() => useFirstRun());
+    await waitFor(() => expect(result.current.status).toBe('complete'));
+
+    let seeded = true;
+    await act(async () => {
+      seeded = await result.current.loadDemo();
+    });
+
+    expect(seeded).toBe(false);
+    expect(result.current.error).toContain('fresh install');
+    // The real farm is untouched; no demo enterprises were added.
+    expect(await db.enterprises.toArray()).toHaveLength(0);
+    expect((await db.farms.toArray())[0]?.name).toBe('My Real Farm');
   });
 });

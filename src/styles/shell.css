@@ -757,6 +757,22 @@ select.field__input {
   max-width: 60ch;
 }
 
+/* Secondary path on step one: load the demo farm (E8-01) instead of setting up
+   manually, separated from the primary flow by a divider. */
+.first-run__demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--border);
+}
+
+.first-run__demo-hint {
+  font-size: var(--size-label);
+  line-height: var(--leading-label);
+  color: var(--text-muted);
+}
+
 @media (min-width: 768px) {
   .app-shell {
     flex-direction: row;

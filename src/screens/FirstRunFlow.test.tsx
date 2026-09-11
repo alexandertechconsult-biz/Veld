@@ -9,11 +9,13 @@ function renderFlow(
     error: string | null;
     onCreateFarm: (name: string) => Promise<boolean>;
     onAddEnterprise: (name: string, type: string) => Promise<boolean>;
+    onLoadDemo: () => Promise<boolean>;
     onDone: () => void;
   }> = {},
 ) {
   const onCreateFarm = overrides.onCreateFarm ?? vi.fn(async () => true);
   const onAddEnterprise = overrides.onAddEnterprise ?? vi.fn(async () => true);
+  const onLoadDemo = overrides.onLoadDemo ?? vi.fn(async () => true);
   const onDone = overrides.onDone ?? vi.fn();
   render(
     <FirstRunFlow
@@ -23,10 +25,11 @@ function renderFlow(
       onAddEnterprise={
         onAddEnterprise as (name: string, type: 'livestock' | 'crop') => Promise<boolean>
       }
+      onLoadDemo={onLoadDemo}
       onDone={onDone}
     />,
   );
-  return { onCreateFarm, onAddEnterprise, onDone };
+  return { onCreateFarm, onAddEnterprise, onLoadDemo, onDone };
 }
 
 describe('FirstRunFlow', () => {
@@ -95,5 +98,16 @@ describe('FirstRunFlow', () => {
 
     expect(screen.getByTestId('first-run-farm-input')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    expect(screen.getByTestId('first-run-load-demo')).toBeDisabled();
+  });
+
+  it('loads the demo farm from the first step without needing manual setup', async () => {
+    const { onLoadDemo, onCreateFarm } = renderFlow();
+
+    fireEvent.click(screen.getByTestId('first-run-load-demo'));
+
+    await waitFor(() => expect(onLoadDemo).toHaveBeenCalledTimes(1));
+    // The demo path does not go through the manual farm-name save.
+    expect(onCreateFarm).not.toHaveBeenCalled();
   });
 });

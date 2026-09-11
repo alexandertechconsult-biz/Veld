@@ -3,6 +3,7 @@ import { repositories } from '../data';
 import type { EnterpriseType } from '../data';
 import { EmptyFarmNameError, loadCurrentFarm, saveFarmProfile } from '../data/farmProfile';
 import { EmptyEnterpriseNameError, NoFarmYetError, addEnterprise } from '../data/enterprises';
+import { DemoDataExistsError, seedDemoData } from '../data/demoData';
 
 /** Whether the guided first-run flow is still detecting, needed, or already done. */
 export type FirstRunStatus = 'loading' | 'needed' | 'complete';
@@ -87,5 +88,29 @@ export function useFirstRun() {
     [],
   );
 
-  return { status, saving, error, createFarm, addFirstEnterprise };
+  /**
+   * Loads the pre-populated demo farm (E8-01) instead of manual setup, so Barrett
+   * can show the concept without the farmer's real data. On success it flips the
+   * flow to complete, handing off to the shell where the seeded data appears.
+   */
+  const loadDemo = useCallback(async (): Promise<boolean> => {
+    setSaving(true);
+    setError(null);
+    try {
+      await seedDemoData(repositories, Date.now());
+      setStatus('complete');
+      return true;
+    } catch (err) {
+      setError(
+        err instanceof DemoDataExistsError
+          ? err.message
+          : 'Could not load the demo farm. Please try again.',
+      );
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  return { status, saving, error, createFarm, addFirstEnterprise, loadDemo };
 }

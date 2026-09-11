@@ -10,7 +10,7 @@ import { useFirstRun } from './screens/useFirstRun';
  * (or the farmer finishes the flow) it hands off to the shell for good.
  */
 export default function App() {
-  const { status, saving, error, createFarm, addFirstEnterprise } = useFirstRun();
+  const { status, saving, error, createFarm, addFirstEnterprise, loadDemo } = useFirstRun();
   const [finished, setFinished] = useState(false);
 
   if (status === 'loading') {
@@ -30,6 +30,7 @@ export default function App() {
         error={error}
         onCreateFarm={createFarm}
         onAddEnterprise={addFirstEnterprise}
+        onLoadDemo={loadDemo}
         onDone={() => setFinished(true)}
       />
     );
